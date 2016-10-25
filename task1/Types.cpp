@@ -13,7 +13,7 @@ std::ostream& operator<<(std::ostream& out,const Integer& value)
    return out;
 }
 //---------------------------------------------------------------------------
-Integer Integer::castString(const char* str,uint32_t strLen)
+Integer Integer::castString(const char* str, uint32_t strLen)
    // Cast a string to an integer value
 {
    auto iter=str,limit=str+strLen;

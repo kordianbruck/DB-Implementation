@@ -1,14 +1,101 @@
 #include <iostream>
 #include <cstdint>
-#include "Types.hpp"
+#include <fstream>
+#include <vector>
+#include <ctime>
 
+#include "Types.hpp"
+#include "Tables.hpp"
+using namespace std;
+
+
+static vector<std::string> lineChunks;
+static void split(string str, string sep) {
+    char* cstr=const_cast<char*>(str.c_str());
+    char* current;
+    lineChunks.clear();
+    current=strtok(cstr, sep.c_str());
+    while(current!=NULL) {
+        lineChunks.push_back(current);
+        current=strtok(NULL,sep.c_str());
+    }
+}
+
+template <typename T>
+static void loadFile(string file, vector<T>* db) {
+    ifstream myfile(file);
+    if (!myfile.is_open()) {
+        return;
+    }
+
+    string line;
+    while ( getline (myfile,line) ) {
+        split(line,"|");
+        db->push_back(T::parse(lineChunks));
+    }
+}
+
+//Init our vectors holding all the data
+static int baseSize = 1000;
+static vector<Warehouse> warehouses(baseSize);
+static vector<District> districts(baseSize);
+static vector<Customer> customers(baseSize);
+static vector<History> histories(baseSize);
+static vector<NewOrder> newOrders(baseSize);
+static vector<Order> orders(baseSize);
+static vector<OrderLine> orderLines(baseSize);
+static vector<Item> items(baseSize);
+static vector<Stock> stocks(baseSize);
 
 int main(int argc, char **argv) {
-    std::cout << "Hello, world!" << std::endl;
+    cout << "TPC-C Testrun" << endl;
+    cout << "--------------------------" << endl;
+
+    //Load data into "db"
+    try {
+        clock_t begin = clock();
+        cout << "Loading: " << endl;
+        loadFile("../tbl/tpcc_warehouse.tbl", &warehouses);
+        cout << "\tWarehouses: " << warehouses.size() << endl;
+
+        loadFile("../tbl/tpcc_district.tbl", &districts);
+        cout << "\tDistricts: " << districts.size() << endl;
+
+        loadFile("../tbl/tpcc_customer.tbl", &customers);
+        cout << "\tCustomers: " << customers.size() << endl;
+
+        loadFile("../tbl/tpcc_history.tbl", &histories);
+        cout << "\tHistories: " << histories.size() << endl;
+
+        loadFile("../tbl/tpcc_neworder.tbl", &newOrders);
+        cout << "\tNewOrders: " << newOrders.size() << endl;
+
+        loadFile("../tbl/tpcc_order.tbl", &orders);
+        cout << "\tOrders: " << orders.size() << endl;
+
+        loadFile("../tbl/tpcc_orderline.tbl", &orderLines);
+        cout << "\tOrderLines: " << orderLines.size() << endl;
+
+        loadFile("../tbl/tpcc_item.tbl", &items);
+        cout << "\tItems: " << items.size() << endl;
+
+        loadFile("../tbl/tpcc_stock.tbl", &stocks);
+        cout << "\tStock: " << stocks.size() << endl;
+
+        clock_t end = clock();
+        cout << "done. Took:" << (double(end - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
+    } catch (std::exception const &exc) {
+        std::cerr << "Exception caught " << exc.what() << "\n";
+    } catch (char const* str) {
+        std::cerr << str;
+    }
+    
     return 0;
 }
 
-void newOrder(Integer w_id, Integer d_id, Integer c_id, Integer items, Integer* supware, Integer* itemid, Integer* qty, Date datetime) {
+
+
+void newOrder(int32_t w_id, int32_t d_id, int32_t c_id, int32_t items, int32_t* supware, int32_t* itemid, int32_t* qty, Timestamp datetime) {
     /*select w_tax from warehouse w where w.w_id=w_id;
     select c_discount from customer c where c_w_id=w_id and c_d_id=d_id and c.c_id=c_id;
     select d_next_o_id as o_id,d_tax from district d where d_w_id=w_id and d.d_id=d_id;
@@ -48,7 +135,6 @@ void newOrder(Integer w_id, Integer d_id, Integer c_id, Integer items, Integer* 
 
 };
 
-const int32_t warehouses=5;
 
 int32_t urand(int32_t min,int32_t max) {
     return (random()%(max-min+1))+min;
@@ -69,16 +155,17 @@ int32_t nurand(int32_t A,int32_t x,int32_t y) {
 }
 
 void newOrderRandom() {
-    Date now(0);
-    Integer w_id=urand(1,warehouses);
-    Integer d_id=urand(1,10);
-    Integer c_id=nurand(1023,1,3000);
-    Integer ol_cnt=urand(5,15);
+    int warehouses = 5;
+    Timestamp now(0);
+    int32_t w_id=urand(1,warehouses);
+    int32_t d_id=urand(1,10);
+    int32_t c_id=nurand(1023,1,3000);
+    int32_t ol_cnt=urand(5,15);
 
-    Integer supware[15];
-    Integer itemid[15];
-    Integer qty[15];
-    for (Integer i=0; i<ol_cnt; i++) {
+    int32_t supware[15];
+    int32_t itemid[15];
+    int32_t qty[15];
+    for (int32_t i=0; i<ol_cnt; i++) {
         if (urand(1,100)>1)
             supware[i]=w_id;
         else
@@ -87,6 +174,6 @@ void newOrderRandom() {
         qty[i]=urand(1,10);
     }
 
-    newOrder(w_id,d_id,c_id,ol_cnt, supware, itemid, qty,now);
+    newOrder(w_id,d_id,c_id,ol_cnt,supware,itemid,qty,now);
 }
 

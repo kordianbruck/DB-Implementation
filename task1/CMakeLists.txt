@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.6)
 project(task1)
 
-add_executable(task1 main.cpp neworderrandom.cpp Types.cpp)
+add_definitions(-std=c++11)
+add_executable(task1 main.cpp Types.cpp)
 
 install(TARGETS task1 RUNTIME DESTINATION bin)
