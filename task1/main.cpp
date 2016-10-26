@@ -7,8 +7,9 @@
 #include <unordered_map>
 
 #include "Types.hpp"
-#include "Tables.hpp"
+#include "table_types.hpp"
 using namespace std;
+
 
 
 static vector<std::string> lineChunks;
@@ -33,7 +34,9 @@ static void loadFile(string file, vector<T>* db) {
     string line;
     while ( getline (myfile,line) ) {
         split(line,"|");
-        db->push_back(T::parse(lineChunks));
+        T* tmp = new T();
+        tmp->parse(lineChunks);
+        db->push_back(*tmp);
     }
 }
 
