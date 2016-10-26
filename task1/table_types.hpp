@@ -1,5 +1,5 @@
-#ifndef H_Tables
-#define H_Tables
+#ifndef TABLE_TYPES_H
+#define TABLE_TYPES_H
 
 #include "Types.hpp"
 
@@ -7,8 +7,8 @@ template <typename... T>
 class TableType {
 public:
     using indexType = std::tuple<T...>;
-    virtual void parse(std::vector<std::string>);
-    virtual indexType getKey();
+    void parse(std::vector<std::string>);
+    indexType getKey();
 };
 
 class Warehouse : public TableType<Integer> {
@@ -23,7 +23,7 @@ public:
     Numeric<4,4> w_tax;
     Numeric<12,2> w_ytd;
         
-    inline virtual void parse(std::vector<std::string> row) final{
+    inline void parse(std::vector<std::string> row){
         this->w_id.castString(row[0].c_str(), row[0].length());
         this->w_name.castString(row[1].c_str(), row[1].length());
         this->w_street_1.castString(row[2].c_str(), row[2].length());
@@ -35,12 +35,12 @@ public:
         this->w_ytd.castString(row[8].c_str(), row[8].length());
     }
   
-    inline virtual indexType getKey() final{
-        return indexType{w_id};
+    inline indexType getKey(){
+        return indexType{this->w_id};
     }
 };
 
-class District {
+class District : public TableType<Integer, Integer> {
 public:
     Integer d_id;
     Integer d_w_id;
@@ -54,7 +54,7 @@ public:
     Numeric<12,2> d_ytd;
     Integer d_next_o_id;
     
-    inline void parse(std::vector<std::string> row) {
+    inline void parse(std::vector<std::string> row){
         this->d_id.castString(row[0].c_str(), row[0].length());
         this->d_w_id.castString(row[1].c_str(), row[1].length());
         this->d_name.castString(row[2].c_str(), row[2].length());
@@ -67,11 +67,15 @@ public:
         this->d_ytd.castString(row[9].c_str(), row[9].length());
         this->d_next_o_id.castString(row[10].c_str(), row[10].length());
     }
+    
     // primary key (d_w_id,d_id)
+    inline indexType getKey(){
+        return indexType{this->d_w_id, this->d_id};
+    }
 };
 
 
-class Customer {
+class Customer : public TableType<Integer, Integer, Integer> {
 public:
     Integer c_id;
     Integer c_d_id;
@@ -119,10 +123,13 @@ public:
         this->c_data.castString(row[20].c_str(), row[20].length());
     }
     //primary key (c_w_id,c_d_id,c_id)
+    inline indexType getKey(){
+        return indexType{this->c_w_id, this->c_d_id, this->c_id};
+    }
 };
 
 
-class History {
+class History : public TableType<Integer>{
 public:
     Integer h_c_id;
     Integer h_c_d_id;
@@ -143,9 +150,13 @@ public:
         this->h_amount.castString(row[6].c_str(), row[6].length());
         this->h_data.castString(row[7].c_str(), row[7].length());
     }
+    
+    inline indexType getKey(){
+        return indexType{this->h_c_id};
+    }
 };
 
-class NewOrder {
+class NewOrder : public TableType<Integer, Integer, Integer>{
 public:
     Integer no_o_id;
     Integer no_d_id;
@@ -158,9 +169,12 @@ public:
     }
     
     //primary key (no_w_id,no_d_id,no_o_id)
+    inline indexType getKey(){
+        return indexType{this->no_w_id, this->no_d_id, this->no_o_id};
+    }
 };
 
-class Order {
+class Order : public TableType<Integer, Integer, Integer>{
 public:
     Integer o_id;
     Integer o_d_id;
@@ -182,9 +196,12 @@ public:
         this->o_all_local.castString(row[7].c_str(), row[7].length());
     }
     // primary key (o_w_id,o_d_id,o_id)
+    inline indexType getKey(){
+        return indexType{this->o_w_id, this->o_d_id, this->o_id};
+    }
 };
 
-class OrderLine {
+class OrderLine : public TableType<Integer, Integer, Integer, Integer>{
 public:
     Integer ol_o_id;
     Integer ol_d_id;
@@ -209,9 +226,12 @@ public:
         this->ol_dist_info.castString(row[8].c_str(), row[8].length());
     }
     //primary key (ol_w_id,ol_d_id,ol_o_id,ol_number)
+    inline indexType getKey(){
+        return indexType{this->ol_w_id, this->ol_d_id, this->ol_o_id, this->ol_number};
+    }
 };
 
-class Item {
+class Item : public TableType<Integer>{
 public:
     Integer i_id;
     Integer i_im_id;
@@ -227,9 +247,12 @@ public:
         this->i_data.castString(row[4].c_str(), row[4].length());
     }
     //primary key (i_id)
+    inline indexType getKey(){
+        return indexType{this->i_id};
+    }
 };
 
-class Stock {
+class Stock : public TableType<Integer, Integer>{
 public:
     Integer s_i_id;
     Integer s_w_id;
@@ -238,12 +261,12 @@ public:
     Char<24> s_dist_02 ;
     Char<24> s_dist_03 ;
     Char<24> s_dist_04 ;
-    Char<24>  s_dist_05 ;
+    Char<24> s_dist_05 ;
     Char<24> s_dist_06 ;
-    Char<24>  s_dist_07 ;
-    Char<24>  s_dist_08 ;
-    Char<24>  s_dist_09 ;
-    Char<24>  s_dist_10 ;
+    Char<24> s_dist_07 ;
+    Char<24> s_dist_08 ;
+    Char<24> s_dist_09 ;
+    Char<24> s_dist_10 ;
     Numeric<8,0> s_ytd;
     Numeric<4,0> s_order_cnt ;
     Numeric<4,0> s_remote_cnt ;
@@ -269,6 +292,9 @@ public:
         this->s_data.castString(row[16].c_str(), row[16].length());
     }
     // primary key (s_w_id,s_i_id)
+    inline indexType getKey(){
+        return indexType{this->s_w_id, this->s_i_id};
+    }
 };
 
 

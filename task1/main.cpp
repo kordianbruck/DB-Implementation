@@ -6,155 +6,91 @@
 #include <ctime>
 #include <unordered_map>
 
-#include "Types.hpp"
-#include "table_types.hpp"
+#include "database.h"
+
 using namespace std;
 
-
-
-static vector<std::string> lineChunks;
-static void split(string str, string sep) {
-    char* cstr=const_cast<char*>(str.c_str());
-    char* current;
-    lineChunks.clear();
-    current=strtok(cstr, sep.c_str());
-    while(current!=NULL) {
-        lineChunks.push_back(current);
-        current=strtok(NULL,sep.c_str());
-    }
-}
-
-template <typename T>
-static void loadFile(string file, vector<T>* db) {
-    ifstream myfile(file);
-    if (!myfile.is_open()) {
-        return;
-    }
-
-    string line;
-    while ( getline (myfile,line) ) {
-        split(line,"|");
-        T* tmp = new T();
-        tmp->parse(lineChunks);
-        db->push_back(*tmp);
-    }
-}
-
-//Init our vectors holding all the data
-static int baseSize = 1000;
-static vector<Warehouse> warehouses(baseSize);
-static unordered_map<Integer, u_int32_t> warehousesPrimaryKey();
-
-static vector<District> districts(baseSize);
-static unordered_map<tuple<Integer, Integer>, u_int32_t> districtsPrimaryKey();
-
-static vector<Customer> customers(baseSize);
-static unordered_map<tuple<Integer, Integer, Integer>, u_int32_t> customersPrimaryKey();
-
-static vector<History> histories(baseSize);
-
-static vector<NewOrder> newOrders(baseSize);
-static unordered_map<tuple<Integer, Integer, Integer>, u_int32_t> newOrdersPrimaryKey();
-
-static vector<Order> orders(baseSize);
-static unordered_map<tuple<Integer, Integer, Integer>, u_int32_t> ordersPrimaryKey();
-
-static vector<OrderLine> orderLines(baseSize);
-static unordered_map<tuple<Integer, Integer, Integer, Integer>, u_int32_t> orderLinesPrimaryKey();
-
-static vector<Item> items(baseSize);
-static unordered_map<Integer, u_int32_t> itemsPrimaryKey();
-
-static vector<Stock> stocks(baseSize);
-static unordered_map<tuple<Integer, Integer>, u_int32_t> stocksPrimaryKey();
-
-int main(int argc, char **argv) {
-    cout << "TPC-C Testrun" << endl;
-    cout << "--------------------------" << endl;
-
-    //Load data into "db"
-    try {
-        clock_t begin = clock();
-        cout << "Loading: " << endl;
-        loadFile("../tbl/tpcc_warehouse.tbl", &warehouses);
-        cout << "\tWarehouses: " << warehouses.size() << endl;
-
-        loadFile("../tbl/tpcc_district.tbl", &districts);
-        cout << "\tDistricts: " << districts.size() << endl;
-
-        loadFile("../tbl/tpcc_customer.tbl", &customers);
-        cout << "\tCustomers: " << customers.size() << endl;
-
-        loadFile("../tbl/tpcc_history.tbl", &histories);
-        cout << "\tHistories: " << histories.size() << endl;
-
-        loadFile("../tbl/tpcc_neworder.tbl", &newOrders);
-        cout << "\tNewOrders: " << newOrders.size() << endl;
-
-        loadFile("../tbl/tpcc_order.tbl", &orders);
-        cout << "\tOrders: " << orders.size() << endl;
-
-        loadFile("../tbl/tpcc_orderline.tbl", &orderLines);
-        cout << "\tOrderLines: " << orderLines.size() << endl;
-
-        loadFile("../tbl/tpcc_item.tbl", &items);
-        cout << "\tItems: " << items.size() << endl;
-
-        loadFile("../tbl/tpcc_stock.tbl", &stocks);
-        cout << "\tStock: " << stocks.size() << endl;
-
-        clock_t end = clock();
-        cout << "done. Took:" << (double(end - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
-    } catch (std::exception const &exc) {
-        std::cerr << "Exception caught " << exc.what() << "\n";
-    } catch (char const* str) {
-        std::cerr << str;
+void newOrder(Database* db, int32_t w_id, int32_t d_id, int32_t c_id, int32_t items, int32_t* supware, int32_t itemid[], int32_t qty[], Timestamp datetime) {
+    auto w_tax = db->warehouses.row(make_tuple(w_id)).w_tax;
+    auto c_discount = db->customers.row(make_tuple(w_id, d_id, c_id)).c_discount;
+    auto district = db->districts.row(make_tuple(w_id, d_id));
+    auto o_id = district.d_next_o_id;
+    auto d_tax = district.d_tax;
+    district.d_next_o_id += 1;
+    db->districts.update(district);
+    
+    int32_t all_local = 1;
+    for(int i=0; i < items; i++){
+        if(w_id != supware[i]){
+                all_local = 0;
+        }
     }
     
-    return 0;
-}
-
-
-
-void newOrder(int32_t w_id, int32_t d_id, int32_t c_id, int32_t items, int32_t* supware, int32_t* itemid, int32_t* qty, Timestamp datetime) {
-    /*select w_tax from warehouse w where w.w_id=w_id;
-    select c_discount from customer c where c_w_id=w_id and c_d_id=d_id and c.c_id=c_id;
-    select d_next_o_id as o_id,d_tax from district d where d_w_id=w_id and d.d_id=d_id;
-    update district set d_next_o_id=o_id+1 where d_w_id=w_id and district.d_id=d_id;
-
-    int32_t all_local = 1;
-    forsequence (index between 0 and items-1) {
-        if (w_id != supware[index])
-            all_local=0;
-    }
-
-    insert into "order" values (o_id,d_id,w_id,c_id,datetime,0,items,all_local);
-    insert into neworder values (o_id,d_id,w_id);
-
-    forsequence (index between 0 and items-1) {
-        select i_price from item where i_id=itemid[index];
-    select s_quantity,s_remote_cnt,s_order_cnt,case d_id when 1 then s_dist_01 when 2 then s_dist_02 when 3 then s_dist_03 when 4 then s_dist_04 when 5 then s_dist_05 when 6 then s_dist_06 when 7 then s_dist_07 when 8 then s_dist_08 when 9 then s_dist_09 when 10 then s_dist_10 end as s_dist from stock where s_w_id=supware[index] and s_i_id=itemid[index];
-
+    Order* o = new Order();
+    o->o_id = o_id; o->o_d_id = d_id; o->o_w_id = w_id; o->o_c_id = c_id; o->o_entry_d=datetime;o->o_carrier_id = 0; o->o_ol_cnt = items; o->o_all_local = all_local;
+    db->orders.insert(o);
+    
+    NewOrder* no  = new NewOrder();
+    no->no_o_id = o_id; no->no_d_id = d_id; no->no_w_id = w_id;
+    db->newOrders.insert(no);
+    
+    //forsequence (index between 0 and items-1) {
+    for (int index = 0; index < items; ++index) {
+        //select i_price from item where i_id=itemid[index];
+        auto i_price = db->items.row(make_tuple(itemid[index])).i_price;
+        
+        //select s_quantity,s_remote_cnt,s_order_cnt,case d_id ... as s_dist from stock where s_w_id=supware[index] and s_i_id=itemid[index];
+        auto stock = db->stocks.row(make_tuple(supware[index], itemid[index]));
+        auto s_quantity = stock.s_quantity;
+        auto s_remote_cnt = stock.s_remote_cnt;
+        auto s_order_cnt = stock.s_order_cnt;
+        Char<24> s_dist;
+        switch (d_id) {
+            default:
+            case  1: s_dist = stock.s_dist_01;
+            case  2: s_dist = stock.s_dist_02;
+            case  3: s_dist = stock.s_dist_03;
+            case  4: s_dist = stock.s_dist_04;
+            case  5: s_dist = stock.s_dist_05;
+            case  6: s_dist = stock.s_dist_06;
+            case  7: s_dist = stock.s_dist_07;
+            case  8: s_dist = stock.s_dist_01;
+            case  9: s_dist = stock.s_dist_09;
+            case 10: s_dist = stock.s_dist_10;
+        }
+        
         if (s_quantity>qty[index]) {
-            update stock set s_quantity=s_quantity-qty[index] where s_w_id=supware[index] and s_i_id=itemid[index];
+            //update stock set s_quantity=s_quantity-qty[index] where s_w_id=supware[index] and s_i_id=itemid[index];
+            stock.s_quantity = s_quantity - qty[index];
         } else {
-            update stock set s_quantity=s_quantity+91-qty[index] where s_w_id=supware[index] and s_i_id=itemid[index];
+            //update stock set s_quantity=s_quantity+91-qty[index] where s_w_id=supware[index] and s_i_id=itemid[index];
+            stock.s_quantity = s_quantity + 91 - qty[index];
         }
-
-        if (supware[index]<>w_id) {
-            update stock set s_remote_cnt=s_remote_cnt+1 where s_w_id=w_id and s_i_id=itemid[index];
+        db->stocks.update(stock);
+        
+        auto stockSecond = db->stocks.row(make_tuple(w_id, itemid[index]));
+        if (supware[index]!=w_id) {
+            //update stock set s_remote_cnt=s_remote_cnt+1 where s_w_id=w_id and s_i_id=itemid[index];
+            stock.s_remote_cnt = s_remote_cnt + 1;
         } else {
-            update stock set s_order_cnt=s_order_cnt+1 where s_w_id=w_id and s_i_id=itemid[index];
+            //update stock set s_order_cnt=s_order_cnt+1 where s_w_id=w_id and s_i_id=itemid[index];
+            stock.s_order_cnt = s_order_cnt + 1;
         }
-
-        var numeric(6,2) ol_amount=qty[index]*i_price*(1.0+w_tax+d_tax)*(1.0-c_discount);
-        insert into orderline values (o_id,d_id,w_id,index+1,itemid[index],supware[index],0,qty[index],ol_amount,s_dist);
+        db->stocks.update(stock);
+        
+        //var numeric(6,2) ol_amount=qty[index]*i_price*(1.0+w_tax+d_tax)*(1.0-c_discount);
+        auto numericOne = Numeric<4,4>(1.0);
+        auto ol_amount = qty[index]* i_price* (numericOne+w_tax+d_tax) * (numericOne-c_discount);
+        
+        //insert into orderline values (o_id,d_id,w_id,index+1,itemid[index],supware[index],0,qty[index],ol_amount,s_dist);
+        OrderLine* ol = new OrderLine();
+        ol->ol_o_id = o_id;ol->ol_d_id = d_id;ol->ol_w_id = w_id;
+        ol->ol_number = index+1;ol->ol_i_id = itemid[index];
+        ol->ol_supply_w_id = supware[index];ol->ol_delivery_d = 0;
+        ol->ol_quantity = qty[index];ol->ol_amount = ol_amount;ol->ol_dist_info = s_dist;
+        db->orderLines.insert(ol);
     }
-    commit;
-    */
-
-
-};
+}
 
 
 int32_t urand(int32_t min,int32_t max) {
@@ -175,7 +111,7 @@ int32_t nurand(int32_t A,int32_t x,int32_t y) {
     return ((((random()%A)|(random()%(y-x+1)+x))+42)%(y-x+1))+x;
 }
 
-void newOrderRandom() {
+void newOrderRandom(Database* db) {
     int warehouses = 5;
     Timestamp now(0);
     int32_t w_id=urand(1,warehouses);
@@ -195,6 +131,30 @@ void newOrderRandom() {
         qty[i]=urand(1,10);
     }
 
-    newOrder(w_id,d_id,c_id,ol_cnt,supware,itemid,qty,now);
+    newOrder(db, w_id,d_id,c_id,ol_cnt,supware,itemid,qty,now);
 }
 
+int main(int argc, char **argv) {
+    Database* db = new Database();
+    
+    cout << "TPC-C Testrun" << endl;
+    cout << "--------------------------" << endl;
+
+    //Load data into "db"
+    try {
+        cout << "Loading: " << endl;
+        clock_t begin = clock();
+        db->import("../tbl/"s);
+        clock_t end = clock();
+        cout << "done. Took:" << (double(end - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
+        
+        newOrderRandom(db);
+        
+    } catch (std::exception const &exc) {
+        std::cerr << "Exception caught " << exc.what() << "\n";
+    } catch (char const* str) {
+        std::cerr << str;
+    }
+    
+    return 0;
+}

@@ -1,20 +1,33 @@
-/*
- * <one line to give the program's name and a brief idea of what it does.>
- * Copyright (C) 2016  <copyright holder> <email>
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
- */
 
 #include "database.h"
+
+using namespace std;
+
+void Database::import(const string& path) {        
+        this->warehouses.loadTableFromFile(path + "tpcc_warehouse.tbl"s);
+        cout << "\tWarehouses: " << this->warehouses.size() << endl;
+
+        this->districts.loadTableFromFile(path + "tpcc_district.tbl"s);
+        cout << "\tDistricts: " << districts.size() << endl;
+        
+        this->customers.loadTableFromFile(path + "tpcc_customer.tbl"s);
+        cout << "\tCustomers: " << customers.size() << endl;
+        
+        this->histories.loadTableFromFile(path + "tpcc_history.tbl"s);
+        cout << "\tHistories: " << histories.size() << endl;
+        
+        this->newOrders.loadTableFromFile(path + "tpcc_neworder.tbl"s);
+        cout << "\tNewOrders: " << newOrders.size() << endl;
+        
+        this->orders.loadTableFromFile(path + "tpcc_order.tbl"s);
+        cout << "\tOrders: " << orders.size() << endl;
+
+        this->orderLines.loadTableFromFile(path + "tpcc_orderline.tbl"s);
+        cout << "\tOrderLines: "s << orderLines.size() << endl;
+
+        this->items.loadTableFromFile(path + "tpcc_item.tbl"s);
+        cout << "\tItems: "s << items.size() << endl;
+
+        this->stocks.loadTableFromFile(path + "tpcc_stock.tbl"s);
+        cout << "\tStock: "s << stocks.size() << endl;
+}

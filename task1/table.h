@@ -1,26 +1,6 @@
-/*
- * <one line to give the program's name and a brief idea of what it does.>
- * Copyright (C) 2016  <copyright holder> <email>
- * 
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- * 
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- * 
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
- */
 
 #ifndef TABLE_H
 #define TABLE_H
-
-#define TABLE_BASE_SIZE 1000
 
 #include <iostream>
 #include <cstdint>
@@ -33,13 +13,63 @@
 #include "Types.hpp"
 #include "table_types.hpp"
 
-using namespace std;
+
+void split(std::string str, std::string sep, std::vector<std::string>& lineChunks) {
+    char* cstr=const_cast<char*>(str.c_str());
+    char* current;
+    lineChunks.clear();
+    current=strtok(cstr, sep.c_str());
+    while(current!=NULL) {
+        lineChunks.push_back(current);
+        current=strtok(NULL,sep.c_str());
+    } 
+}
 
 template <typename T>
-class Table
-{
-    vector<T> table(TABLE_BASE_SIZE);
-    unordered_map<Integer, u_int32_t> warehousesPrimaryKey();
+struct Table{
+    //friend class Table;
+    using KeyType = decltype(((T*)nullptr)->getKey());
+    
+    inline void loadTableFromFile(const std::string& file){
+        std::ifstream myfile(file);
+        if (!myfile.is_open()) {
+            return;
+        }
+
+        std::string line;
+        std::vector<std::string> lineChunks;
+        while ( getline (myfile,line) ) {
+            split(line,"|", lineChunks);
+            T* tmp = new T();
+            tmp->parse(lineChunks);
+            table.push_back(*tmp);
+        }
+    }
+    
+    size_t size(){
+        return table.size();
+    }
+    T row(KeyType k){
+        return table[primary[k]];
+    }
+    void insert(T* element){
+        table.push_back(element);
+        primary[element->getKey()] = this->table.size() - 1;
+    }
+    void update(T& element){
+        auto i = this->primary[element.getKey()];
+        table[i] = element;
+    }
+    void buildIndex(){
+        size_t size = this->table.size();
+        primary.reserve(size);
+        for(size_t i = 0; i < size; i++) {
+            primary[table[i].getKey()] = i;
+        }
+    }
+private:
+    std::vector<T> table{};
+    std::unordered_map<KeyType, u_int32_t> primary{};
     
 };
 
