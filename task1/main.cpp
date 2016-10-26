@@ -2,7 +2,9 @@
 #include <cstdint>
 #include <fstream>
 #include <vector>
+#include <utility>
 #include <ctime>
+#include <unordered_map>
 
 #include "Types.hpp"
 #include "Tables.hpp"
@@ -38,14 +40,30 @@ static void loadFile(string file, vector<T>* db) {
 //Init our vectors holding all the data
 static int baseSize = 1000;
 static vector<Warehouse> warehouses(baseSize);
+static unordered_map<Integer, u_int32_t> warehousesPrimaryKey();
+
 static vector<District> districts(baseSize);
+static unordered_map<tuple<Integer, Integer>, u_int32_t> districtsPrimaryKey();
+
 static vector<Customer> customers(baseSize);
+static unordered_map<tuple<Integer, Integer, Integer>, u_int32_t> customersPrimaryKey();
+
 static vector<History> histories(baseSize);
+
 static vector<NewOrder> newOrders(baseSize);
+static unordered_map<tuple<Integer, Integer, Integer>, u_int32_t> newOrdersPrimaryKey();
+
 static vector<Order> orders(baseSize);
+static unordered_map<tuple<Integer, Integer, Integer>, u_int32_t> ordersPrimaryKey();
+
 static vector<OrderLine> orderLines(baseSize);
+static unordered_map<tuple<Integer, Integer, Integer, Integer>, u_int32_t> orderLinesPrimaryKey();
+
 static vector<Item> items(baseSize);
+static unordered_map<Integer, u_int32_t> itemsPrimaryKey();
+
 static vector<Stock> stocks(baseSize);
+static unordered_map<tuple<Integer, Integer>, u_int32_t> stocksPrimaryKey();
 
 int main(int argc, char **argv) {
     cout << "TPC-C Testrun" << endl;
