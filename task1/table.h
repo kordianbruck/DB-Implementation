@@ -9,26 +9,28 @@
 #include <utility>
 #include <ctime>
 #include <unordered_map>
+#include <tuple>
 
 #include "Types.hpp"
 #include "table_types.hpp"
-
-
-void split(std::string str, std::string sep, std::vector<std::string>& lineChunks) {
-    char* cstr=const_cast<char*>(str.c_str());
-    char* current;
-    lineChunks.clear();
-    current=strtok(cstr, sep.c_str());
-    while(current!=NULL) {
-        lineChunks.push_back(current);
-        current=strtok(NULL,sep.c_str());
-    } 
-}
+#include "tupel_hash.h"
 
 template <typename T>
-struct Table{
+class Table{
+public:
     //friend class Table;
-    using KeyType = decltype(((T*)nullptr)->getKey());
+    using primaryType = decltype(((T*)nullptr)->key());
+    
+    inline void split(std::string str, std::string sep, std::vector<std::string>& lineChunks) {
+        char* cstr=const_cast<char*>(str.c_str());
+        char* current;
+        lineChunks.clear();
+        current=strtok(cstr, sep.c_str());
+        while(current!=NULL) {
+            lineChunks.push_back(current);
+            current=strtok(NULL,sep.c_str());
+        } 
+    }
     
     inline void loadTableFromFile(const std::string& file){
         std::ifstream myfile(file);
@@ -46,30 +48,34 @@ struct Table{
         }
     }
     
-    size_t size(){
+    inline size_t size(){
         return table.size();
     }
-    T row(KeyType k){
+    
+    inline T row(primaryType k){
         return table[primary[k]];
     }
-    void insert(T* element){
-        table.push_back(element);
-        primary[element->getKey()] = this->table.size() - 1;
+    
+    inline void insert(T* element){
+        table.push_back(*element);
+        primary[element->key()] = this->table.size() - 1;
     }
-    void update(T& element){
-        auto i = this->primary[element.getKey()];
+    
+    inline void update(T& element){
+        auto i = this->primary[element.key()];
         table[i] = element;
     }
-    void buildIndex(){
+    
+    inline void buildIndex(){
         size_t size = this->table.size();
         primary.reserve(size);
         for(size_t i = 0; i < size; i++) {
-            primary[table[i].getKey()] = i;
+            primary[table[i].key()] = i;
         }
     }
 private:
     std::vector<T> table{};
-    std::unordered_map<KeyType, u_int32_t> primary{};
+    std::unordered_map<primaryType, u_int32_t> primary{};
     
 };
 

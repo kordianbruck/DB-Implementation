@@ -1,17 +1,10 @@
 #ifndef TABLE_TYPES_H
 #define TABLE_TYPES_H
 
+#include "tupel_hash.h"
 #include "Types.hpp"
 
-template <typename... T>
-class TableType {
-public:
-    using indexType = std::tuple<T...>;
-    void parse(std::vector<std::string>);
-    indexType getKey();
-};
-
-class Warehouse : public TableType<Integer> {
+class Warehouse  {
 public:
     Integer w_id; // PK
     Varchar<10> w_name;
@@ -35,12 +28,12 @@ public:
         this->w_ytd.castString(row[8].c_str(), row[8].length());
     }
   
-    inline indexType getKey(){
-        return indexType{this->w_id};
+    inline std::tuple<Integer> key() const{
+        return std::make_tuple(this->w_id);
     }
 };
 
-class District : public TableType<Integer, Integer> {
+class District  {
 public:
     Integer d_id;
     Integer d_w_id;
@@ -69,13 +62,13 @@ public:
     }
     
     // primary key (d_w_id,d_id)
-    inline indexType getKey(){
-        return indexType{this->d_w_id, this->d_id};
+    inline std::tuple<Integer, Integer>  key() const{
+        return std::make_tuple(this->d_w_id, this->d_id);
     }
 };
 
 
-class Customer : public TableType<Integer, Integer, Integer> {
+class Customer  {
 public:
     Integer c_id;
     Integer c_d_id;
@@ -123,13 +116,13 @@ public:
         this->c_data.castString(row[20].c_str(), row[20].length());
     }
     //primary key (c_w_id,c_d_id,c_id)
-    inline indexType getKey(){
-        return indexType{this->c_w_id, this->c_d_id, this->c_id};
+    inline std::tuple<Integer, Integer, Integer>  key() const{
+        return std::make_tuple(this->c_w_id, this->c_d_id, this->c_id);
     }
 };
 
 
-class History : public TableType<Integer>{
+struct History {
 public:
     Integer h_c_id;
     Integer h_c_d_id;
@@ -151,12 +144,12 @@ public:
         this->h_data.castString(row[7].c_str(), row[7].length());
     }
     
-    inline indexType getKey(){
-        return indexType{this->h_c_id};
+    inline std::tuple<Integer>  key() const{
+        return std::make_tuple(this->h_c_id);
     }
 };
 
-class NewOrder : public TableType<Integer, Integer, Integer>{
+class NewOrder {
 public:
     Integer no_o_id;
     Integer no_d_id;
@@ -169,12 +162,12 @@ public:
     }
     
     //primary key (no_w_id,no_d_id,no_o_id)
-    inline indexType getKey(){
-        return indexType{this->no_w_id, this->no_d_id, this->no_o_id};
+    inline std::tuple<Integer, Integer, Integer>  key() const{
+        return std::make_tuple(this->no_w_id, this->no_d_id, this->no_o_id);
     }
 };
 
-class Order : public TableType<Integer, Integer, Integer>{
+class Order {
 public:
     Integer o_id;
     Integer o_d_id;
@@ -196,12 +189,12 @@ public:
         this->o_all_local.castString(row[7].c_str(), row[7].length());
     }
     // primary key (o_w_id,o_d_id,o_id)
-    inline indexType getKey(){
-        return indexType{this->o_w_id, this->o_d_id, this->o_id};
+    inline std::tuple<Integer, Integer, Integer>  key() const{
+        return std::make_tuple(this->o_w_id, this->o_d_id, this->o_id);
     }
 };
 
-class OrderLine : public TableType<Integer, Integer, Integer, Integer>{
+class OrderLine {
 public:
     Integer ol_o_id;
     Integer ol_d_id;
@@ -212,7 +205,7 @@ public:
     Timestamp ol_delivery_d ;
     Numeric<2,0> ol_quantity;
     Numeric<6,2> ol_amount;
-    Char<64> ol_dist_info;
+    Char<24> ol_dist_info;
 
     inline void parse(std::vector<std::string> row) {
         this->ol_o_id.castString(row[0].c_str(), row[0].length());
@@ -226,12 +219,12 @@ public:
         this->ol_dist_info.castString(row[8].c_str(), row[8].length());
     }
     //primary key (ol_w_id,ol_d_id,ol_o_id,ol_number)
-    inline indexType getKey(){
-        return indexType{this->ol_w_id, this->ol_d_id, this->ol_o_id, this->ol_number};
+    inline std::tuple<Integer, Integer, Integer, Integer>  key() const{
+        return std::make_tuple(this->ol_w_id, this->ol_d_id, this->ol_o_id, this->ol_number);
     }
 };
 
-class Item : public TableType<Integer>{
+class Item {
 public:
     Integer i_id;
     Integer i_im_id;
@@ -247,12 +240,12 @@ public:
         this->i_data.castString(row[4].c_str(), row[4].length());
     }
     //primary key (i_id)
-    inline indexType getKey(){
-        return indexType{this->i_id};
+    inline std::tuple<Integer>  key() const{
+        return std::make_tuple(this->i_id);
     }
 };
 
-class Stock : public TableType<Integer, Integer>{
+class Stock {
 public:
     Integer s_i_id;
     Integer s_w_id;
@@ -292,8 +285,8 @@ public:
         this->s_data.castString(row[16].c_str(), row[16].length());
     }
     // primary key (s_w_id,s_i_id)
-    inline indexType getKey(){
-        return indexType{this->s_w_id, this->s_i_id};
+    inline std::tuple<Integer, Integer>  key() const{
+        return std::make_tuple(this->s_w_id, this->s_i_id);
     }
 };
 

@@ -10,7 +10,7 @@
 
 using namespace std;
 
-void newOrder(Database* db, int32_t w_id, int32_t d_id, int32_t c_id, int32_t items, int32_t* supware, int32_t itemid[], int32_t qty[], Timestamp datetime) {
+void newOrder(Database* db, int32_t w_id, int32_t d_id, int32_t c_id, int32_t items, int32_t* supware, int32_t itemid[], int32_t qty[], Timestamp datetime) {   
     auto w_tax = db->warehouses.row(make_tuple(w_id)).w_tax;
     auto c_discount = db->customers.row(make_tuple(w_id, d_id, c_id)).c_discount;
     auto district = db->districts.row(make_tuple(w_id, d_id));
@@ -79,8 +79,10 @@ void newOrder(Database* db, int32_t w_id, int32_t d_id, int32_t c_id, int32_t it
         db->stocks.update(stock);
         
         //var numeric(6,2) ol_amount=qty[index]*i_price*(1.0+w_tax+d_tax)*(1.0-c_discount);
-        auto numericOne = Numeric<4,4>(1.0);
-        auto ol_amount = qty[index]* i_price* (numericOne+w_tax+d_tax) * (numericOne-c_discount);
+        auto numericOne = Numeric<4,4> (1.0);
+        auto tmpTax = ((numericOne+w_tax+d_tax) * (numericOne-c_discount)).castS<6>();
+        auto tmpPrice = (Numeric<5, 2>(qty[index]) * i_price).castS<6>();
+        Numeric<6,2> ol_amount =  (tmpTax.castM2<6>().castM2<6>() * tmpPrice).castM2<6>().castM2<6>().castM2<6>();
         
         //insert into orderline values (o_id,d_id,w_id,index+1,itemid[index],supware[index],0,qty[index],ol_amount,s_dist);
         OrderLine* ol = new OrderLine();
@@ -145,10 +147,17 @@ int main(int argc, char **argv) {
         cout << "Loading: " << endl;
         clock_t begin = clock();
         db->import("../tbl/"s);
-        clock_t end = clock();
-        cout << "done. Took:" << (double(end - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
+        cout << "done. Took:" << (double(clock() - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
         
-        newOrderRandom(db);
+        cout << endl << "Starting inserts..." << endl;
+        begin = clock();
+        for(int i=0; i < 100000;i++){
+            newOrderRandom(db);
+        }
+        auto end = clock();
+        cout << "done. " << "Took: " << (double(end - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
+        cout << "Transactions per second: " << 1000000.0 / (double(end - begin) / CLOCKS_PER_SEC)<< endl;
+        cout << "Counts: " <<db->orders.size() << " orders | " << db->newOrders.size() << " newOrders | " << db->orderLines.size() << " orderLines " << endl;
         
     } catch (std::exception const &exc) {
         std::cerr << "Exception caught " << exc.what() << "\n";
