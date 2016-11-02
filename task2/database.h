@@ -5,10 +5,10 @@
 #include <cstdint>
 #include "table.h"
 
-class Database{
+class Database {
 public:
-    void import(const std::string& path);
-    
+    void import(const std::string &path);
+
     Table<Warehouse> warehouses;
     Table<District> districts;
     Table<Customer> customers;
@@ -19,7 +19,7 @@ public:
     Table<Item> items;
     Table<Stock> stocks;
 private:
-    
+
 };
 
 #endif // DATABASE_H

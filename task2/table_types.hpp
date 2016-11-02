@@ -4,7 +4,7 @@
 #include "tupel_hash.h"
 #include "Types.hpp"
 
-class Warehouse  {
+class Warehouse {
 public:
     Integer w_id; // PK
     Varchar<10> w_name;
@@ -13,10 +13,10 @@ public:
     Varchar<20> w_city;
     Char<2> w_state;
     Char<9> w_zip;
-    Numeric<4,4> w_tax;
-    Numeric<12,2> w_ytd;
-        
-    inline void parse(std::vector<std::string> row){
+    Numeric<4, 4> w_tax;
+    Numeric<12, 2> w_ytd;
+
+    inline void parse(std::vector<std::string> row) {
         this->w_id.castString(row[0].c_str(), row[0].length());
         this->w_name.castString(row[1].c_str(), row[1].length());
         this->w_street_1.castString(row[2].c_str(), row[2].length());
@@ -27,13 +27,13 @@ public:
         this->w_tax.castString(row[7].c_str(), row[7].length());
         this->w_ytd.castString(row[8].c_str(), row[8].length());
     }
-  
-    inline std::tuple<Integer> key() const{
+
+    inline std::tuple<Integer> key() const {
         return std::make_tuple(this->w_id);
     }
 };
 
-class District  {
+class District {
 public:
     Integer d_id;
     Integer d_w_id;
@@ -43,11 +43,11 @@ public:
     Varchar<20> d_city;
     Char<2> d_state;
     Char<9> d_zip;
-    Numeric<4,4> d_tax;
-    Numeric<12,2> d_ytd;
+    Numeric<4, 4> d_tax;
+    Numeric<12, 2> d_ytd;
     Integer d_next_o_id;
-    
-    inline void parse(std::vector<std::string> row){
+
+    inline void parse(std::vector<std::string> row) {
         this->d_id.castString(row[0].c_str(), row[0].length());
         this->d_w_id.castString(row[1].c_str(), row[1].length());
         this->d_name.castString(row[2].c_str(), row[2].length());
@@ -60,38 +60,38 @@ public:
         this->d_ytd.castString(row[9].c_str(), row[9].length());
         this->d_next_o_id.castString(row[10].c_str(), row[10].length());
     }
-    
+
     // primary key (d_w_id,d_id)
-    inline std::tuple<Integer, Integer>  key() const{
+    inline std::tuple<Integer, Integer> key() const {
         return std::make_tuple(this->d_w_id, this->d_id);
     }
 };
 
 
-class Customer  {
+class Customer {
 public:
     Integer c_id;
     Integer c_d_id;
     Integer c_w_id;
-    Varchar<16> c_first ;
+    Varchar<16> c_first;
     Char<2> c_middle;
-    Varchar<16> c_last ;
+    Varchar<16> c_last;
     Varchar<20> c_street_1;
     Varchar<20> c_street_2;
     Varchar<20> c_city;
     Char<2> c_state;
     Char<9> c_zip;
-    Char<16> c_phone ;
+    Char<16> c_phone;
     Timestamp c_since;
-    Char<2>  c_credit;
-    Numeric<12,2> c_credit_lim;
-    Numeric<4,4> c_discount;
-    Numeric<12,2> c_balance;
-    Numeric<12,2> c_ytd_paymenr;
-    Numeric<4,0> c_payment_cnt ;
-    Numeric<4,0> c_delivery_cnt ;
+    Char<2> c_credit;
+    Numeric<12, 2> c_credit_lim;
+    Numeric<4, 4> c_discount;
+    Numeric<12, 2> c_balance;
+    Numeric<12, 2> c_ytd_paymenr;
+    Numeric<4, 0> c_payment_cnt;
+    Numeric<4, 0> c_delivery_cnt;
     Varchar<500> c_data;
-    
+
     inline void parse(std::vector<std::string> row) {
         this->c_id.castString(row[0].c_str(), row[0].length());
         this->c_d_id.castString(row[1].c_str(), row[1].length());
@@ -115,8 +115,9 @@ public:
         this->c_delivery_cnt.castString(row[19].c_str(), row[19].length());
         this->c_data.castString(row[20].c_str(), row[20].length());
     }
+
     //primary key (c_w_id,c_d_id,c_id)
-    inline std::tuple<Integer, Integer, Integer>  key() const{
+    inline std::tuple<Integer, Integer, Integer> key() const {
         return std::make_tuple(this->c_w_id, this->c_d_id, this->c_id);
     }
 };
@@ -129,10 +130,10 @@ public:
     Integer h_c_w_id;
     Integer h_d_id;
     Integer h_w_id;
-    Timestamp h_date ;
-    Numeric<6,2> h_amount;
-    Varchar<24> h_data ;
-    
+    Timestamp h_date;
+    Numeric<6, 2> h_amount;
+    Varchar<24> h_data;
+
     inline void parse(std::vector<std::string> row) {
         this->h_c_id.castString(row[0].c_str(), row[0].length());
         this->h_c_d_id.castString(row[1].c_str(), row[1].length());
@@ -143,8 +144,8 @@ public:
         this->h_amount.castString(row[6].c_str(), row[6].length());
         this->h_data.castString(row[7].c_str(), row[7].length());
     }
-    
-    inline std::tuple<Integer>  key() const{
+
+    inline std::tuple<Integer> key() const {
         return std::make_tuple(this->h_c_id);
     }
 };
@@ -154,15 +155,15 @@ public:
     Integer no_o_id;
     Integer no_d_id;
     Integer no_w_id;
-    
+
     inline void parse(std::vector<std::string> row) {
         this->no_o_id.castString(row[0].c_str(), row[0].length());
         this->no_d_id.castString(row[1].c_str(), row[1].length());
         this->no_w_id.castString(row[2].c_str(), row[2].length());
     }
-    
+
     //primary key (no_w_id,no_d_id,no_o_id)
-    inline std::tuple<Integer, Integer, Integer>  key() const{
+    inline std::tuple<Integer, Integer, Integer> key() const {
         return std::make_tuple(this->no_w_id, this->no_d_id, this->no_o_id);
     }
 };
@@ -173,11 +174,11 @@ public:
     Integer o_d_id;
     Integer o_w_id;
     Integer o_c_id;
-    Timestamp o_entry_d ;
+    Timestamp o_entry_d;
     Integer o_carrier_id;
-    Numeric<2,0> o_ol_cnt;
-    Numeric<1,0> o_all_local;
-    
+    Numeric<2, 0> o_ol_cnt;
+    Numeric<1, 0> o_all_local;
+
     inline void parse(std::vector<std::string> row) {
         this->o_id.castString(row[0].c_str(), row[0].length());
         this->o_d_id.castString(row[1].c_str(), row[1].length());
@@ -188,8 +189,9 @@ public:
         this->o_ol_cnt.castString(row[6].c_str(), row[6].length());
         this->o_all_local.castString(row[7].c_str(), row[7].length());
     }
+
     // primary key (o_w_id,o_d_id,o_id)
-    inline std::tuple<Integer, Integer, Integer>  key() const{
+    inline std::tuple<Integer, Integer, Integer> key() const {
         return std::make_tuple(this->o_w_id, this->o_d_id, this->o_id);
     }
 };
@@ -202,9 +204,9 @@ public:
     Integer ol_number;
     Integer ol_i_id;
     Integer ol_supply_w_id;
-    Timestamp ol_delivery_d ;
-    Numeric<2,0> ol_quantity;
-    Numeric<6,2> ol_amount;
+    Timestamp ol_delivery_d;
+    Numeric<2, 0> ol_quantity;
+    Numeric<6, 2> ol_amount;
     Char<24> ol_dist_info;
 
     inline void parse(std::vector<std::string> row) {
@@ -218,8 +220,9 @@ public:
         this->ol_amount.castString(row[7].c_str(), row[7].length());
         this->ol_dist_info.castString(row[8].c_str(), row[8].length());
     }
+
     //primary key (ol_w_id,ol_d_id,ol_o_id,ol_number)
-    inline std::tuple<Integer, Integer, Integer, Integer>  key() const{
+    inline std::tuple<Integer, Integer, Integer, Integer> key() const {
         return std::make_tuple(this->ol_w_id, this->ol_d_id, this->ol_o_id, this->ol_number);
     }
 };
@@ -229,9 +232,9 @@ public:
     Integer i_id;
     Integer i_im_id;
     Varchar<24> i_name;
-    Numeric<5,2> i_price;
+    Numeric<5, 2> i_price;
     Varchar<50> i_data;
-    
+
     inline void parse(std::vector<std::string> row) {
         this->i_id.castString(row[0].c_str(), row[0].length());
         this->i_im_id.castString(row[1].c_str(), row[1].length());
@@ -239,8 +242,9 @@ public:
         this->i_price.castString(row[3].c_str(), row[3].length());
         this->i_data.castString(row[4].c_str(), row[4].length());
     }
+
     //primary key (i_id)
-    inline std::tuple<Integer>  key() const{
+    inline std::tuple<Integer> key() const {
         return std::make_tuple(this->i_id);
     }
 };
@@ -249,22 +253,22 @@ class Stock {
 public:
     Integer s_i_id;
     Integer s_w_id;
-    Numeric<4,0> s_quantity ;
-    Char<24> s_dist_01 ;
-    Char<24> s_dist_02 ;
-    Char<24> s_dist_03 ;
-    Char<24> s_dist_04 ;
-    Char<24> s_dist_05 ;
-    Char<24> s_dist_06 ;
-    Char<24> s_dist_07 ;
-    Char<24> s_dist_08 ;
-    Char<24> s_dist_09 ;
-    Char<24> s_dist_10 ;
-    Numeric<8,0> s_ytd;
-    Numeric<4,0> s_order_cnt ;
-    Numeric<4,0> s_remote_cnt ;
+    Numeric<4, 0> s_quantity;
+    Char<24> s_dist_01;
+    Char<24> s_dist_02;
+    Char<24> s_dist_03;
+    Char<24> s_dist_04;
+    Char<24> s_dist_05;
+    Char<24> s_dist_06;
+    Char<24> s_dist_07;
+    Char<24> s_dist_08;
+    Char<24> s_dist_09;
+    Char<24> s_dist_10;
+    Numeric<8, 0> s_ytd;
+    Numeric<4, 0> s_order_cnt;
+    Numeric<4, 0> s_remote_cnt;
     Varchar<50> s_data;
-    
+
     inline void parse(std::vector<std::string> row) {
         this->s_i_id.castString(row[0].c_str(), row[0].length());
         this->s_w_id.castString(row[1].c_str(), row[1].length());
@@ -284,11 +288,10 @@ public:
         this->s_remote_cnt.castString(row[15].c_str(), row[15].length());
         this->s_data.castString(row[16].c_str(), row[16].length());
     }
+
     // primary key (s_w_id,s_i_id)
-    inline std::tuple<Integer, Integer>  key() const{
+    inline std::tuple<Integer, Integer> key() const {
         return std::make_tuple(this->s_w_id, this->s_i_id);
     }
 };
-
-
 #endif

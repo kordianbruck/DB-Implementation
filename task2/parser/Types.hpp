@@ -10,20 +10,20 @@
  * Types
  */
 namespace Types {
-   enum class Tag : unsigned {Integer, Char};
+   enum class Tag : unsigned {Integer, Char, Numeric, Varchar, Date, Timestamp};
 }
 
 
 /**
  * Integer
  */
-typedef int Integer;
+//typedef int Integer;
 
 
 /**
  * Char
  */
-template <unsigned len>
+/*template <unsigned len>
 struct Char {
    char data[len];
    void loadString(const std::string& str);
@@ -43,7 +43,7 @@ void Char<len>::loadString(const std::string& str) {
 template <unsigned len>
 std::string Char<len>::toString() {
    return std::string(data, data+len);
-}
+}*/
 
 /**
  * Numeric
