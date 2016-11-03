@@ -193,7 +193,7 @@ int main(int argc, char** argv) {
         cout << endl << "Starting simulation..." << endl << endl;
         begin = clock();
         int deliveries = 0, newOrders = 0;
-        for (int i = 0; i < 100000; i++) {
+        for (int i = 0; i < 1000000; i++) {
             if (urand(1, 100) <= 10) {
                 deliveryRandom(db);
                 deliveries++;
