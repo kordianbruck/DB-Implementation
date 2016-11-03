@@ -1,4 +1,4 @@
 tbl/
 build/
-
+db.h
 *.kate-swp
