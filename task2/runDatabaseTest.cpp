@@ -98,6 +98,37 @@ void newOrder(Database* db, int32_t w_id, int32_t d_id, int32_t c_id, int32_t it
     }
 }
 
+void delivery(Database* db, Integer w_id, Integer o_carrier_id, Timestamp datetime) {
+
+    //Iterate over all districts
+    for (int d_id = 1; d_id < 10; d_id++) {
+        const auto o_id_itr = db->neworder.pkTree.lower_bound(std::make_tuple(w_id, d_id, INT32_MIN));
+        if (o_id_itr == db->neworder.pkTree.end()) {
+            continue; //If nothing is found, skip this district
+        }
+        const auto order = db->neworder.row(o_id_itr->first);
+        const auto o_id = order.no_o_id;
+        db->neworder.remove(db->neworder.pk[o_id_itr->first]);
+
+        auto o = db->order.row(std::make_tuple(w_id, d_id, o_id));
+        const auto o_ol_cnt = o.o_ol_cnt;
+        const auto o_c_id = o.o_c_id;
+        o.o_carrier_id = o_carrier_id;
+        db->order.update(o);
+
+        Numeric<6, 2> ol_total = 0;
+        for (int ol_number = 1; Numeric<2, 0>(ol_number) < o_ol_cnt; ol_number += 1) {
+            auto ol = db->orderline.row(std::make_tuple(w_id, d_id, o_id, ol_number));
+            const auto ol_amount = ol.ol_amount;
+            ol_total = ol_total + ol_amount;
+            ol.ol_delivery_d = datetime;
+            db->orderline.update(ol);
+        }
+
+        auto customer = db->customer.row(std::make_tuple(w_id, d_id, o_c_id));
+        customer.c_balance = customer.c_balance + ol_total.castS<12>();
+    }
+}
 
 int32_t urand(int32_t min, int32_t max) {
     return (random() % (max - min + 1)) + min;
@@ -121,7 +152,6 @@ int32_t nurand(int32_t A, int32_t x, int32_t y) {
 
 void newOrderRandom(Database* db) {
     int warehouses = 5;
-    Timestamp now(0);
     int32_t w_id = urand(1, warehouses);
     int32_t d_id = urand(1, 10);
     int32_t c_id = nurand(1023, 1, 3000);
@@ -140,7 +170,11 @@ void newOrderRandom(Database* db) {
         qty[i] = urand(1, 10);
     }
 
-    newOrder(db, w_id, d_id, c_id, ol_cnt, supware, itemid, qty, now);
+    newOrder(db, w_id, d_id, c_id, ol_cnt, supware, itemid, qty, Timestamp(0));
+}
+
+void deliveryRandom(Database* db) {
+    delivery(db, urand(1, 5), urand(1, 10), Timestamp(0));
 }
 
 int main(int argc, char** argv) {
@@ -156,14 +190,22 @@ int main(int argc, char** argv) {
         db->import("../tbl/");
         cout << "done. Took:" << (double(clock() - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
 
-        cout << endl << "Starting inserts..." << endl;
+        cout << endl << "Starting simulation..." << endl << endl;
         begin = clock();
+        int deliveries = 0, newOrders = 0;
         for (int i = 0; i < 100000; i++) {
-            newOrderRandom(db);
+            if (urand(1, 100) <= 10) {
+                deliveryRandom(db);
+                deliveries++;
+            } else {
+                newOrderRandom(db);
+                newOrders++;
+            }
         }
         auto end = clock();
         cout << "done. " << "Took: " << (double(end - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
         cout << "Transactions per second: " << 1000000.0 / (double(end - begin) / CLOCKS_PER_SEC) << endl;
+        cout << "New Orders: " << newOrders << " / Deliveries: " << deliveries << "/ Ratio " << ((double) deliveries / (double) newOrders) * 100 << "%" << endl;
         cout << "Counts: " << db->order.size() << " orders | " << db->neworder.size() << " newOrders | " << db->orderline.size() << " orderlines " << endl;
 
     } catch (std::exception const& exc) {

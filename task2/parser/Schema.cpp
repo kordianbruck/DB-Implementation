@@ -84,8 +84,10 @@ string Schema::generateDatabaseCode() const {
         << "#include <ctime>" << endl
         << "#include <unordered_map>" << endl
         << "#include <tuple>" << endl
+        << "#include <map>" << endl
         << "#include \"Types.hpp\"" << endl
         << "#include \"tupel_hash.h\"" << endl;
+
 
     out << "struct Database {" << endl;
     out << "private: " << endl;
@@ -123,24 +125,42 @@ string Schema::generateDatabaseCode() const {
         out << "        std::vector<Row> table{};" << endl;
         if (hasPK) {
             out << "        std::unordered_map<pkType, u_int32_t> pk{};" << endl;
+            out << "        std::map<pkType, u_int32_t> pkTree{};" << endl;
+        }
+        if (rel.indexes.size() > 0) {
+            for (auto e : rel.indexes) {
+                out << "        //TODO ADD INDEXES AS MULTIMAP" << endl;
+                //    out << "        std::unordered_multimap<..."
+            }
         }
 
         //Some table functions that are useful
         out << "        size_t size() { return table.size(); }" << endl;
         if (hasPK) {
             out << "        Row row(pkType k) { return table[pk[k]]; }" << endl;
-        } else {
-            out << "        Row row(size_t i) { return table[i]; }" << endl;
         }
+        out << "        Row row(size_t i) { return table[i]; }" << endl;
 
         if (hasPK) { //Don't allow updating rows, if the table does not have a PK
             out << "        void update(Row& element) { table[pk[element.key()]] = element; }" << endl;
         }
 
+        //Removing elements
+        out << "        void remove(size_t i) {" << endl;
+        if(hasPK) {
+            out << "            const auto key = row(i).key();" << "";
+            out << "            pk.erase(key);" << "";
+            out << "            pkTree.erase(key);" << "";
+        }
+        out << "            table.erase(table.begin() + i);" << "";
+        out << "        }" << "";
+
+        //Inserting
         out << "        void insert(const Row& element) { " << endl;
         out << "            table.push_back(element); " << endl;
         if (hasPK) {
             out << "            pk[element.key()] = table.size() - 1;" << endl;
+            out << "            pkTree[element.key()] = table.size() - 1;" << endl;
         }
         out << "        }" << endl;
         if (hasPK) {
@@ -149,6 +169,7 @@ string Schema::generateDatabaseCode() const {
             out << "            pk.reserve(size);" << endl;
             out << "            for (size_t i = 0; i < size; i++) {" << endl;
             out << "                pk[table[i].key()] = i;" << endl;
+            out << "                pkTree[table[i].key()] = i;" << endl;
             out << "            }" << endl;
             out << "        }" << endl;
         }
