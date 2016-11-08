@@ -38,7 +38,7 @@ void newOrder(Database* db, int32_t w_id, int32_t d_id, int32_t c_id, int32_t it
     //forsequence (index between 0 and items-1) {
     for (int index = 0; index < items; ++index) {
         //select i_price from item where i_id=itemid[index];
-        auto i_price = db->item.row(make_tuple(itemid[index])).i_price;
+        const auto i_price = db->item.row(make_tuple(itemid[index])).i_price;
 
         //select s_quantity,s_remote_cnt,s_order_cnt,case d_id ... as s_dist from stock where s_w_id=supware[index] and s_i_id=itemid[index];
         auto stock = db->stock.row(make_tuple(supware[index], itemid[index]));
@@ -79,7 +79,7 @@ void newOrder(Database* db, int32_t w_id, int32_t d_id, int32_t c_id, int32_t it
         }
         db->stock.update(stock);
 
-        auto stockecond = db->stock.row(make_tuple(w_id, itemid[index]));
+        stock = db->stock.row(make_tuple(w_id, itemid[index]));
         if (supware[index] != w_id) {
             //update stock set s_remote_cnt=s_remote_cnt+1 where s_w_id=w_id and s_i_id=itemid[index];
             stock.s_remote_cnt = s_remote_cnt + 1;
@@ -104,7 +104,7 @@ void delivery(Database* db, Integer w_id, Integer o_carrier_id, Timestamp dateti
     //Iterate over all districts
     for (int d_id = 1; d_id < 10; d_id++) {
         const auto o_id_itr = db->neworder.pkTree.lower_bound(std::make_tuple(w_id, d_id, INT32_MIN));
-        if (o_id_itr == db->neworder.pkTree.end()) {
+        if (o_id_itr == db->neworder.pkTree.end() || std::get<0>(o_id_itr->first) != w_id || std::get<1>(o_id_itr->first) != d_id) {
             continue; //If nothing is found, skip this district
         }
         const auto order = db->neworder.row(o_id_itr->first);
