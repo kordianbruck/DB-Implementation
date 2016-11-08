@@ -115,7 +115,7 @@ string Schema::generateDatabaseCode() const {
         out << "            Row* ret = new Row();" << endl;
         int i = 0;
         for (auto e : rel.attributes) {
-            out << "            ret->" << e.name << ".castString(row[" << i << "].c_str(), row[" << i << "].length());" << endl;
+            out << "            ret->" << e.name << " = ret->" << e.name << ".castString(row[" << i << "].c_str(), row[" << i << "].length());" << endl;
             i++;
         }
         out << "            return ret;" << endl;
@@ -179,14 +179,12 @@ string Schema::generateDatabaseCode() const {
     }
 
     //The split function for parsing the table data
-    out << "    void split(std::string str, std::string sep, std::vector<std::string>& lineChunks) {\n"
-            "        char* cstr = const_cast<char*>(str.c_str());\n"
-            "        char* current;\n"
+    out << "    void split(const std::string str, std::vector<std::string>& lineChunks) {\n"
+            "        std::stringstream in(str);\n"
+            "        std::string segment;\n"
             "        lineChunks.clear();\n"
-            "        current = strtok(cstr, sep.c_str());\n"
-            "        while (current != NULL) {\n"
-            "            lineChunks.push_back(current);\n"
-            "            current = strtok(NULL, sep.c_str());\n"
+            "        while (std::getline(in, segment, '|')) {\n"
+            "           lineChunks.push_back(segment);\n"
             "        }\n"
             "    }" << endl;
 
@@ -201,7 +199,7 @@ string Schema::generateDatabaseCode() const {
             "        std::string line;\n"
             "        std::vector<std::string> lineChunks;\n"
             "        while (getline(myfile, line)) {\n"
-            "            split(line, \"|\", lineChunks);\n"
+            "            split(line, lineChunks);\n"
             "            auto tmp = T::parse(lineChunks);\n"
             "            tbl.table.push_back(*tmp);\n"
             "        }\n"

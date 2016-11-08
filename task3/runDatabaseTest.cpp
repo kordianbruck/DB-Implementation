@@ -177,6 +177,39 @@ void deliveryRandom(Database* db) {
     delivery(db, urand(1, 5), urand(1, 10), Timestamp(0));
 }
 
+Numeric<12, 4> statSum(Database* db) {
+    // c_id, c_d_id, c_w_id
+    std::unordered_map<std::tuple<Integer, Integer, Integer>, size_t> customers{};
+    auto& cust = db->customer.table;
+    for (size_t i = 0; i < cust.size(); i++) {
+        if (cust[i].c_last.value[0] == 'B') { // c_last like 'B%'
+            customers[std::make_tuple(cust[i].c_id, cust[i].c_d_id, cust[i].c_w_id)] = i;
+        }
+    }
+
+    // o_id, o_d_id, o_w_id /
+    std::unordered_map<std::tuple<Integer, Integer, Integer>, std::tuple<size_t, size_t>> orders{};
+    auto& ord = db->order.table;
+    for (size_t i = 0; i < ord.size(); i++) {
+        auto item = customers.find(std::make_tuple(ord[i].o_c_id, ord[i].o_d_id, ord[i].o_w_id)); // o_w_id = c_w_id and o_d_id = c_d_id and o_c_id = c_id
+        if (item != customers.end()) { //If found, add the index to the new hashmap
+            orders[std::make_tuple(ord[i].o_id, ord[i].o_d_id, ord[i].o_w_id)] = std::make_tuple(i, item->second); // Save the customer index in the table as well, so that we don't have to find it later
+        }
+    }
+
+    Numeric<12, 4> sum = 0;
+    auto& ordLine = db->orderline.table;
+    for (size_t i = 0; i < ordLine.size(); i++) {
+        auto order = orders.find(std::make_tuple(ordLine[i].ol_o_id, ordLine[i].ol_d_id, ordLine[i].ol_w_id)); //o_w_id = ol_w_id and o_d_id = ol_d_id and o_id = ol_o_id
+        if (order != orders.end()) { //If found, sum it up
+            //sum(ol_quantity*ol_amount-c_balance*o_ol_cnt)
+            sum += ordLine[i].ol_quantity.castS<12>().castP2() * ordLine[i].ol_amount.castS<12>() - cust[std::get<1>(order->second)].c_balance * ord[std::get<0>(order->second)].o_ol_cnt.castS<12>().castP2();
+        }
+    }
+
+    return sum;
+}
+
 int main(int argc, char** argv) {
     Database* db = new Database();
 
@@ -192,8 +225,12 @@ int main(int argc, char** argv) {
 
         cout << endl << "Starting simulation..." << endl << endl;
         begin = clock();
+
         int deliveries = 0, newOrders = 0;
-        for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < 1; i++) {
+            cout << "Sum = " << statSum(db) << endl;
+        }
+        /*for (int i = 0; i < 1000000; i++) {
             if (urand(1, 100) <= 10) {
                 deliveryRandom(db);
                 deliveries++;
@@ -201,7 +238,7 @@ int main(int argc, char** argv) {
                 newOrderRandom(db);
                 newOrders++;
             }
-        }
+        }*/
         auto end = clock();
         cout << "done. " << "Took: " << (double(end - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
         cout << "Transactions per second: " << 1000000.0 / (double(end - begin) / CLOCKS_PER_SEC) << endl;
