@@ -6,6 +6,7 @@
 #include <ctime>
 #include <unordered_map>
 #include <iostream>
+#include <chrono>
 #include <memory>
 
 #include "parser/Parser.hpp"
@@ -211,7 +212,9 @@ Numeric<12, 4> statSum(Database* db) {
 }
 
 int main(int argc, char** argv) {
+    using namespace std::chrono;
     Database* db = new Database();
+    long iterations = 1000000;
 
     cout << "TPC-C Testrun" << endl;
     cout << "--------------------------" << endl;
@@ -219,18 +222,18 @@ int main(int argc, char** argv) {
     //Load data into "db"
     try {
         cout << "Loading: " << endl;
-        clock_t begin = clock();
+        auto begin = high_resolution_clock::now();
         db->import("../tbl/");
-        cout << "done. Took:" << (double(clock() - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
+        cout << "done loading in " << duration_cast<seconds>(high_resolution_clock::now() - begin).count() << " seconds." << endl;
 
         cout << endl << "Starting simulation..." << endl << endl;
-        begin = clock();
+        begin = high_resolution_clock::now();
 
         int deliveries = 0, newOrders = 0;
         for (int i = 0; i < 1; i++) {
-            cout << "Sum = " << statSum(db) << endl;
+        //    cout << "Sum = " << statSum(db) << endl;
         }
-        /*for (int i = 0; i < 1000000; i++) {
+        for (int i = 0; i < iterations; i++) {
             if (urand(1, 100) <= 10) {
                 deliveryRandom(db);
                 deliveries++;
@@ -238,10 +241,10 @@ int main(int argc, char** argv) {
                 newOrderRandom(db);
                 newOrders++;
             }
-        }*/
-        auto end = clock();
-        cout << "done. " << "Took: " << (double(end - begin) / CLOCKS_PER_SEC) << " seconds." << endl;
-        cout << "Transactions per second: " << 1000000.0 / (double(end - begin) / CLOCKS_PER_SEC) << endl;
+        }
+        auto end = high_resolution_clock::now();
+        cout << "done. " << "Took: " << duration_cast<seconds>(high_resolution_clock::now() - begin).count() << " seconds." << endl;
+        cout << "Transactions per second: " << iterations / duration_cast<seconds>(high_resolution_clock::now() - begin).count() << endl;
         cout << "New Orders: " << newOrders << " / Deliveries: " << deliveries << "/ Ratio " << ((double) deliveries / (double) newOrders) * 100 << "%" << endl;
         cout << "Counts: " << db->order.size() << " orders | " << db->neworder.size() << " newOrders | " << db->orderline.size() << " orderlines " << endl;
 

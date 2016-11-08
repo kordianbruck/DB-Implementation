@@ -148,12 +148,21 @@ string Schema::generateDatabaseCode() const {
         //Removing elements
         out << "        void remove(size_t i) {" << endl;
         if(hasPK) {
-            out << "            const auto key = row(i).key();" << "";
-            out << "            pk.erase(key);" << "";
-            out << "            pkTree.erase(key);" << "";
+            //out << "            const auto key = row(i).key();" << endl;
+            //out << "            pk.erase(key);" << endl;
+            //out << "            pkTree.erase(key);" << endl;
+            out << "            const auto key = row(i).key();" << endl;
+            out << "            pk.erase(key);" << endl;
+            out << "            pkTree.erase(key);" << endl;
+
         }
-        out << "            table.erase(table.begin() + i);" << "";
-        out << "        }" << "";
+        out << "            table[i] = row(table.size()-1);" << endl;
+        out << "            table.pop_back();" << endl;
+        if(hasPK) {
+            out << "            pk[table[i].key()] = i;" << endl;
+            out << "            pkTree[table[i].key()] = i;" << endl;
+        }
+        out << "        }" << endl;
 
         //Inserting
         out << "        void insert(const Row& element) { " << endl;
