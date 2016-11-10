@@ -111,11 +111,11 @@ string Schema::generateDatabaseCode() const {
         out << "        };" << endl;
 
         //Output the parsing algo
-        out << "        static Row* parse(std::vector<std::string> row) {" << endl;
-        out << "            Row* ret = new Row();" << endl;
+        out << "        static Row parse(std::vector<std::string> row) {" << endl;
+        out << "            auto ret = Row{};" << endl;
         int i = 0;
         for (auto e : rel.attributes) {
-            out << "            ret->" << e.name << " = ret->" << e.name << ".castString(row[" << i << "].c_str(), row[" << i << "].length());" << endl;
+            out << "            ret." << e.name << " = ret." << e.name << ".castString(row[" << i << "].c_str(), row[" << i << "].length());" << endl;
             i++;
         }
         out << "            return ret;" << endl;
@@ -210,7 +210,7 @@ string Schema::generateDatabaseCode() const {
             "        while (getline(myfile, line)) {\n"
             "            split(line, lineChunks);\n"
             "            auto tmp = T::parse(lineChunks);\n"
-            "            tbl.table.push_back(*tmp);\n"
+            "            tbl.table.push_back(tmp);\n"
             "        }\n"
             "    }" << endl;
 

@@ -68,7 +68,7 @@ struct Parser {
 
     Parser(const std::string &fileName) : fileName(fileName), state(State::Init) {}
 
-    ~Parser() {};
+    ~Parser();
 
     std::unique_ptr<Schema> parse();
 

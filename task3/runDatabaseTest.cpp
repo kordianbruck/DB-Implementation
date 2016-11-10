@@ -5,7 +5,12 @@
 #include <utility>
 #include <ctime>
 #include <unordered_map>
+#include <atomic>
 #include <iostream>
+#include <signal.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <unistd.h>
 #include <chrono>
 #include <memory>
 
@@ -14,6 +19,7 @@
 #include "db.h"
 
 using namespace std;
+using namespace std::chrono;
 
 void newOrder(Database* db, int32_t w_id, int32_t d_id, int32_t c_id, int32_t items, int32_t* supware, int32_t itemid[], int32_t qty[], Timestamp datetime) {
     auto w_tax = db->warehouse.row(make_tuple(w_id)).w_tax;
@@ -194,7 +200,8 @@ Numeric<12, 4> statSum(Database* db) {
     for (size_t i = 0; i < ord.size(); i++) {
         auto item = customers.find(std::make_tuple(ord[i].o_c_id, ord[i].o_d_id, ord[i].o_w_id)); // o_w_id = c_w_id and o_d_id = c_d_id and o_c_id = c_id
         if (item != customers.end()) { //If found, add the index to the new hashmap
-            orders[std::make_tuple(ord[i].o_id, ord[i].o_d_id, ord[i].o_w_id)] = std::make_tuple(i, item->second); // Save the customer index in the table as well, so that we don't have to find it later
+            orders[std::make_tuple(ord[i].o_id, ord[i].o_d_id, ord[i].o_w_id)] = std::make_tuple(i,
+                                                                                                 item->second); // Save the customer index in the table as well, so that we don't have to find it later
         }
     }
 
@@ -204,48 +211,105 @@ Numeric<12, 4> statSum(Database* db) {
         auto order = orders.find(std::make_tuple(ordLine[i].ol_o_id, ordLine[i].ol_d_id, ordLine[i].ol_w_id)); //o_w_id = ol_w_id and o_d_id = ol_d_id and o_id = ol_o_id
         if (order != orders.end()) { //If found, sum it up
             //sum(ol_quantity*ol_amount-c_balance*o_ol_cnt)
-            sum += ordLine[i].ol_quantity.castS<12>().castP2() * ordLine[i].ol_amount.castS<12>() - cust[std::get<1>(order->second)].c_balance * ord[std::get<0>(order->second)].o_ol_cnt.castS<12>().castP2();
+            sum += ordLine[i].ol_quantity.castS<12>().castP2() * ordLine[i].ol_amount.castS<12>() -
+                   cust[std::get<1>(order->second)].c_balance * ord[std::get<0>(order->second)].o_ol_cnt.castS<12>().castP2();
         }
     }
 
     return sum;
 }
 
+static void runQuery(Database* db, int iterations) {
+    int totalSeconds = 0;
+    Numeric<12, 4> result;
+    for (int i = 0; i < iterations; i++) {
+        auto begin = high_resolution_clock::now();
+        result = statSum(db);
+        auto end = high_resolution_clock::now();
+        totalSeconds += duration_cast<milliseconds>(end - begin).count();
+    }
+    cout << "Query result (" << iterations << "x): " << result << " took on average " << totalSeconds / iterations << "ms" << endl;
+}
+
+atomic<bool> childRunning;
+
+static void SIGCHLD_handler(int /*sig*/) {
+    int status;
+    pid_t childPid = wait(&status);
+    // now the child with process id childPid is dead
+    childRunning = false;
+}
+
 int main(int argc, char** argv) {
-    using namespace std::chrono;
+    //Init our fork logic
+    struct sigaction sa;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = 0;
+    sa.sa_handler = SIGCHLD_handler;
+    sigaction(SIGCHLD, &sa, NULL);
+
+    //Start up the database
     Database* db = new Database();
+
+    //Fixed number of iterations
+#ifdef ENABLE_DEBUG_MACRO
+    long iterations = 10000;
+#else
     long iterations = 1000000;
+#endif
 
     cout << "TPC-C Testrun" << endl;
     cout << "--------------------------" << endl;
 
     //Load data into "db"
     try {
-        cout << "Loading: " << endl;
+        cout << "Loading initial db data: " << endl;
         auto begin = high_resolution_clock::now();
         db->import("../tbl/");
         cout << "done loading in " << duration_cast<seconds>(high_resolution_clock::now() - begin).count() << " seconds." << endl;
 
-        cout << endl << "Starting simulation..." << endl << endl;
-        begin = high_resolution_clock::now();
 
+        cout << endl << "Starting simulation with " << iterations << " iterations ..." << endl << endl;
+        runQuery(db, 10);
+
+        begin = high_resolution_clock::now();
         int deliveries = 0, newOrders = 0;
-        for (int i = 0; i < 1; i++) {
-        //    cout << "Sum = " << statSum(db) << endl;
-        }
+
         for (int i = 0; i < iterations; i++) {
-            if (urand(1, 100) <= 10) {
-                deliveryRandom(db);
-                deliveries++;
-            } else {
-                newOrderRandom(db);
-                newOrders++;
+            auto begin = high_resolution_clock::now();
+            pid_t pid = ~0;
+
+            //Start the child running the query if it finished
+            if (!childRunning) {
+                childRunning = true;
+                pid = fork();
+            }
+
+            if (pid) { // parent
+                if (urand(1, 100) <= 10) {
+                    deliveryRandom(db);
+                    deliveries++;
+                } else {
+                    newOrderRandom(db);
+                    newOrders++;
+                }
+            } else { // forked child
+                auto end = high_resolution_clock::now();
+                cout << "Child fork took " << duration_cast<milliseconds>(end - begin).count() << "ms" << endl;
+                runQuery(db, 1);
+                return 0; // child is finished
+            }
+            if (i % (iterations / 10) == 0) {
+                cout << ((double) i / (double) iterations * 100.0) << "% done" << endl;
             }
         }
         auto end = high_resolution_clock::now();
-        cout << "done. " << "Took: " << duration_cast<seconds>(high_resolution_clock::now() - begin).count() << " seconds." << endl;
-        cout << "Transactions per second: " << iterations / duration_cast<seconds>(high_resolution_clock::now() - begin).count() << endl;
-        cout << "New Orders: " << newOrders << " / Deliveries: " << deliveries << "/ Ratio " << ((double) deliveries / (double) newOrders) * 100 << "%" << endl;
+        // wait for child finishing
+        while(childRunning);
+
+        cout << "done. " << "Took: " << duration_cast<seconds>(end - begin).count() << " seconds." << endl;
+        cout << "Transactions per second: " << iterations / duration_cast<seconds>(end - begin).count() << endl;
+        cout << "New Orders: " << newOrders << " / Deliveries: " << deliveries << " / Ratio " << ((double) deliveries / (double) newOrders) * 100 << "%" << endl;
         cout << "Counts: " << db->order.size() << " orders | " << db->neworder.size() << " newOrders | " << db->orderline.size() << " orderlines " << endl;
 
     } catch (std::exception const& exc) {
@@ -254,5 +318,6 @@ int main(int argc, char** argv) {
         std::cerr << str;
     }
 
+    delete db;
     return 0;
 }

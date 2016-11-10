@@ -29,6 +29,15 @@ namespace literal {
     const char Semicolon = ';';
 }
 
+static Schema::Relation::Index* lastIndex = 0;
+static Schema::Relation* lastIndexRelation = 0;
+
+Parser::~Parser() {
+    if (lastIndex != NULL) {
+        delete lastIndex;
+    }
+}
+
 std::unique_ptr<Schema> Parser::parse() {
     std::string token;
     unsigned line = 1;
@@ -52,10 +61,12 @@ std::unique_ptr<Schema> Parser::parse() {
         }
     }
     in.close();
+
+
     return std::move(s);
 }
 
-static bool isIdentifier(const std::string &str) {
+static bool isIdentifier(const std::string& str) {
     if (
             str == keyword::Primary ||
             str == keyword::Key ||
@@ -76,14 +87,11 @@ static bool isIdentifier(const std::string &str) {
     return str.find_first_not_of("abcdefghijklmnopqrstuvwxyz_1234567890") == std::string::npos;
 }
 
-static bool isInt(const std::string &str) {
+static bool isInt(const std::string& str) {
     return str.find_first_not_of("0123456789") == std::string::npos;
 }
 
-static Schema::Relation::Index *lastIndex = 0;
-static Schema::Relation *lastIndexRelation = 0;
-
-void Parser::nextToken(unsigned line, const std::string &token, Schema &schema) {
+void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) {
     if (getenv("DEBUG")) {
         std::cerr << line << ": " << token << std::endl;
     }
@@ -128,6 +136,9 @@ void Parser::nextToken(unsigned line, const std::string &token, Schema &schema) 
         case State::Index:
             if (isIdentifier(tok)) {
                 state = State::IndexName;
+                if (lastIndex != NULL) {
+                    delete lastIndex;
+                }
                 lastIndex = new Schema::Relation::Index(token);
             } else {
                 throw ParserError(line, "Expected IndexName, found '" + token + "'");
@@ -221,15 +232,15 @@ void Parser::nextToken(unsigned line, const std::string &token, Schema &schema) 
         case State::KeyListBegin:
             if (isIdentifier(tok)) {
                 struct AttributeNamePredicate {
-                    const std::string &name;
+                    const std::string& name;
 
-                    AttributeNamePredicate(const std::string &name) : name(name) {}
+                    AttributeNamePredicate(const std::string& name) : name(name) { }
 
-                    bool operator()(const Schema::Relation::Attribute &attr) const {
+                    bool operator()(const Schema::Relation::Attribute& attr) const {
                         return attr.name == name;
                     }
                 };
-                const auto &attributes = schema.relations.back().attributes;
+                const auto& attributes = schema.relations.back().attributes;
                 AttributeNamePredicate p(token);
                 auto it = std::find_if(attributes.begin(), attributes.end(), p);
                 if (it == attributes.end()) {
