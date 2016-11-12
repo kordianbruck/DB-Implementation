@@ -5,6 +5,9 @@
 
 #include <vector>
 #include <set>
+#include <sstream>
+#include <algorithm>
+#include <random>
 #include "../parser/Schema.hpp"
 
 struct IU; // Predeclare struct
@@ -26,6 +29,8 @@ public:
     string toString();
 
     void setConsumer(Operator*);
+
+    string randomEntityName(std::string::size_type len = 5);
 
 protected:
     Operator* consumer;

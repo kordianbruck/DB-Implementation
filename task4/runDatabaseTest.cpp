@@ -18,6 +18,7 @@
 #include "parser/Schema.hpp"
 #include "db.h"
 #include "Types.hpp"
+#include "query.h"
 
 using namespace std;
 using namespace std::chrono;
@@ -269,6 +270,10 @@ int main(int argc, char** argv) {
         db->import("../tbl/");
         cout << "done loading in " << duration_cast<seconds>(high_resolution_clock::now() - begin).count() << " seconds." << endl;
 
+
+        query(db);
+        delete db;
+        return 0;
 
         cout << endl << "Starting simulation with " << iterations << " iterations ..." << endl << endl;
         runQuery(db, 10);

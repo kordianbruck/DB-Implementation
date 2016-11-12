@@ -76,10 +76,22 @@ int main(int argc, char** argv) {
         auto hashJoin2 = HashJoin(hashJoin1, tblOrderLine, joinCond2);
 
         //Print the data
-        vector<string> outVars{"c_first", "c_last", "o_all_local", "ol_amount"};
+        vector<IU*> outVars{tblCustomer.getIU("c_first"), tblCustomer.getIU("c_last"),
+                            tblOrder.getIU("o_all_local"), tblOrderLine.getIU("ol_amount")};
         auto printer = Print(hashJoin2, outVars);
 
         cout << printer.produce();
+        std::ofstream myfile;
+        myfile.open("query.h");
+        myfile << "#include <string>" << endl;
+        myfile << "#include <map>" << endl;
+        myfile << "#include <iostream>" << endl;
+        myfile << "#include <tuple>\n"
+                "#include \"Types.hpp\"\n"
+                "#include <algorithm>" << endl;
+        myfile << "using namespace std;" << endl;
+        myfile << "void query(Database* db) {" << printer.produce() << "}";
+        myfile.close();
     } catch (ParserError& e) {
         std::cerr << e.what() << " on line " << e.where() << std::endl;
     }

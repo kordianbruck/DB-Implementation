@@ -8,6 +8,7 @@ Selection::Selection(Operator& input, vector<tuple<IU*, string>>& cond) : input(
     for (auto& c : conditions) {
         this->required.insert(get<0>(c));
     }
+    this->produced.insert(input.getProduced().begin(), input.getProduced().end());
 }
 
 string Selection::produce() {
@@ -20,7 +21,7 @@ string Selection::consume(Operator& op) {
 
     out << "if(";
     for (auto& c : conditions) {
-        out << (get<0>(c))->attr->name << " = " << get<1>(c);
+        out << (get<0>(c))->attr->name << " == " << get<1>(c);
         if(c != *(conditions.end()-1)) {
             out << " && ";
         }

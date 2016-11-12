@@ -14,6 +14,10 @@ using namespace std;
 class HashJoin : public  Operator {
     Operator& left;
     Operator& right;
+    vector<tuple<IU*, IU*>>& conditions;
+    string mapName;
+
+    set<IU*> intersectDeps();
 
 public:
     HashJoin(Operator& left, Operator& right, vector<tuple<IU*, IU*>>& conditions);
@@ -21,6 +25,7 @@ public:
 
     string produce() override;
     string consume(Operator&) override;
+
 };
 
 

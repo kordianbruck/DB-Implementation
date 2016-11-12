@@ -11,9 +11,9 @@
 
 class Print : Operator {
     Operator& input;
-    vector<string>& outVars;
+    vector<IU*>& outVars;
 public:
-    Print(Operator&, vector<string>&);
+    Print(Operator&, vector<IU*>&);
 
     ~Print() override {};
 
