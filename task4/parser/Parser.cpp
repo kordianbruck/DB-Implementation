@@ -2,8 +2,13 @@
 
 #include <iostream>
 #include <iterator>
-#include <algorithm>
 #include <cstdlib>
+#include <vector>
+#include <string>
+#include <cmath>
+#include <cstdint>
+#include <stdlib.h>
+#include <algorithm>
 
 namespace keyword {
     const std::string Primary = "primary";
@@ -99,7 +104,7 @@ void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) 
         return;
     }
     std::string tok;
-    std::transform(token.begin(), token.end(), std::back_inserter(tok), tolower);
+    std::transform(token.begin(), token.end(), std::back_inserter(tok), ::tolower);
     switch (state) {
         case State::Semicolon: /* fallthrough */
         case State::Init:

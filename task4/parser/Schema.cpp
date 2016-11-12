@@ -5,7 +5,7 @@
 
 using namespace std;
 
-static string type(const Schema::Relation::Attribute &attr, bool cpp = 0) {
+string Schema::type(const Schema::Relation::Attribute& attr, bool cpp) {
     Types::Tag type = attr.type;
     switch (type) {
         case Types::Tag::Integer:
@@ -36,7 +36,7 @@ static string type(const Schema::Relation::Attribute &attr, bool cpp = 0) {
     throw "type not found";
 }
 
-static string pkList(const Schema::Relation &rel) {
+static string pkList(const Schema::Relation& rel) {
     stringstream out;
     for (auto e : rel.primaryKey) {
         out << rel.attributes[e].name;
@@ -47,10 +47,10 @@ static string pkList(const Schema::Relation &rel) {
     return out.str();
 }
 
-static string pkListType(const Schema::Relation &rel) {
+static string pkListType(const Schema::Relation& rel) {
     stringstream out;
     for (auto e : rel.primaryKey) {
-        out << type(rel.attributes[e], 1);
+        out << Schema::type(rel.attributes[e], 1);
         if (e != rel.primaryKey.back()) {
             out << ", ";
         }
@@ -60,7 +60,7 @@ static string pkListType(const Schema::Relation &rel) {
 
 string Schema::toString() const {
     stringstream out;
-    for (const Schema::Relation &rel : relations) {
+    for (const Schema::Relation& rel : relations) {
         out << rel.name << endl;
         out << "\tPrimary Key:";
         for (unsigned keyId : rel.primaryKey) {
@@ -68,7 +68,7 @@ string Schema::toString() const {
         }
         out << endl;
         out << "\tColumns: " << endl;
-        for (const auto &attr : rel.attributes) {
+        for (const auto& attr : rel.attributes) {
             out << "\t\t" << attr.name << '\t' << type(attr) << (attr.notNull ? " not null" : "") << endl;
         }
     }
@@ -93,7 +93,7 @@ string Schema::generateDatabaseCode() const {
 
     out << "struct Database {" << endl;
     out << "private: " << endl;
-    for (const Schema::Relation &rel : relations) {
+    for (const Schema::Relation& rel : relations) {
         bool hasPK = rel.primaryKey.size() > 0;
         out << "    struct " << rel.name << "{" << endl;
 
@@ -105,7 +105,7 @@ string Schema::generateDatabaseCode() const {
         //Output the Row Type
         out << "        struct Row {" << endl;
         for (auto e : rel.attributes) {
-            out << "            " << type(e, 1) << " " << e.name << ";" << endl;
+            out << "            " << Schema::type(e, 1) << " " << e.name << ";" << endl;
         }
         if (hasPK) {
             out << "            pkType key() const { return std::make_tuple(" << pkList(rel) << "); }" << endl;
@@ -221,13 +221,13 @@ string Schema::generateDatabaseCode() const {
     out << "public: " << endl;
     out << "    Database(const Database&) = delete;\n"
             "    Database () {}" << endl;
-    for (const Schema::Relation &rel : relations) {
+    for (const Schema::Relation& rel : relations) {
         out << "    " << rel.name << " " << rel.name << ";" << endl;
     }
 
     //Import: import any data into our database
     out << "    void import(const std::string &path) {" << endl;
-    for (const Schema::Relation &rel : relations) {
+    for (const Schema::Relation& rel : relations) {
         out << "       loadTableFromFile(" << rel.name << ", path + \"tpcc_" << rel.name << ".tbl\");\n" << endl;
         out << "       std::cout << \"\\t" << rel.name << ": \" << " << rel.name << ".size() << std::endl;" << endl;
     }
@@ -238,8 +238,8 @@ string Schema::generateDatabaseCode() const {
 }
 
 
-Schema::Relation &Schema::findRelation(const string &name) {
-    for (auto &e : this->relations) {
+Schema::Relation& Schema::findRelation(const string& name) {
+    for (auto& e : this->relations) {
         if (e.name == name) {
             return e;
         }
@@ -247,15 +247,24 @@ Schema::Relation &Schema::findRelation(const string &name) {
     throw ParserError(0, "No such table for index: '" + name + "'");
 }
 
-int Schema::Relation::findAttributeIndex(const string &name) {
+int Schema::Relation::findAttributeIndex(const string& name) {
     int i = 0;
-    for (auto &e : this->attributes) {
+    for (auto& e : this->attributes) {
         if (e.name == name) {
             return i;
         }
         i++;
     }
-    throw ParserError(0, "No such table for index: '" + name + "'");
+    throw ParserError(0, "Attribute not found: '" + name + "'");
+}
+
+Schema::Relation::Attribute& Schema::Relation::findAttribute(const std::string& name) {
+    for (auto& e : this->attributes) {
+        if (e.name == name) {
+            return e;
+        }
+    }
+    throw ParserError(0, "Attribute not found: '" + name + "'");
 }
 
 

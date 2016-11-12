@@ -7,9 +7,19 @@
 
 
 #include "Operator.h"
+#include "HashJoin.h"
 
 class Print : Operator {
+    Operator& input;
+    vector<string>& outVars;
+public:
+    Print(Operator&, vector<string>&);
 
+    ~Print() override {};
+
+    string produce() override;
+
+    string consume(Operator&) override;
 };
 
 

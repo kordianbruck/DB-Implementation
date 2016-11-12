@@ -7,9 +7,20 @@
 
 
 #include "Operator.h"
+#include "TableScan.h"
 
-class HashJoin : Operator {
+using namespace std;
 
+class HashJoin : public  Operator {
+    Operator& left;
+    Operator& right;
+
+public:
+    HashJoin(Operator& left, Operator& right, vector<tuple<IU*, IU*>>& conditions);
+    ~HashJoin() override{};
+
+    string produce() override;
+    string consume(Operator&) override;
 };
 
 

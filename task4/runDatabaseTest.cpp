@@ -17,6 +17,7 @@
 #include "parser/Parser.hpp"
 #include "parser/Schema.hpp"
 #include "db.h"
+#include "Types.hpp"
 
 using namespace std;
 using namespace std::chrono;

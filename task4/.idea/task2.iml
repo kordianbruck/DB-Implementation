@@ -16,10 +16,13 @@
       <sourceFolder url="file://$MODULE_DIR$/runCompile.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/table_types.hpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/runDatabaseTest.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/parser/Query.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/parser/Parser.hpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/parser/Schema.cpp" isTestSource="false" />
-      <sourceFolder url="file://$MODULE_DIR$/parser/Parser.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/parser/Query.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/parser/Schema.hpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/parser/Parser.cpp" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/parser/IU.h" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/Types.cpp" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/CMakeLists.txt" isTestSource="false" />
     </content>
