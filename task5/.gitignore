@@ -1,0 +1,5 @@
+tbl/
+build/
+db.h
+query.h
+*.kate-swp
