@@ -1,0 +1,4 @@
+[Project]
+Name=MiniHekaton
+Manager=KDevCMakeManager
+VersionControl=kdevgit
