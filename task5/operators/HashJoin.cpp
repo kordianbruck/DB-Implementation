@@ -4,7 +4,7 @@
 
 #include <sstream>
 #include "HashJoin.h"
-#include "../parser/Parser.hpp"
+#include "../parser/SchemaParser.hpp"
 #include "../parser/IU.h"
 
 using namespace std;

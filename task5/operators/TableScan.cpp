@@ -2,7 +2,7 @@
 #include <sstream>
 #include <algorithm>
 #include "TableScan.h"
-#include "../parser/Parser.hpp"
+#include "../parser/SchemaParser.hpp"
 #include "../parser/IU.h"
 
 TableScan::TableScan(Schema::Relation& rel) : relation(rel) {

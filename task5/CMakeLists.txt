@@ -4,7 +4,10 @@ project(task5)
 #FIND_PACKAGE(Boost 1.40 COMPONENTS program_options REQUIRED)
 #INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
-add_executable(runCompile runCompile.cpp Types.cpp table_types.hpp parser/Schema.cpp parser/Parser.cpp operators/TableScan.cpp operators/TableScan.h operators/Selection.cpp operators/Selection.h operators/HashJoin.cpp operators/HashJoin.h operators/Print.cpp operators/Print.h operators/Operator.cpp operators/Operator.h parser/Query.cpp parser/Query.h parser/IU.h)
+add_executable(runCompile runCompile.cpp Types.cpp table_types.hpp parser/Schema.cpp parser/SchemaParser.cpp parser/Query.cpp parser/QueryParser.cpp parser/IU.h
+        operators/TableScan.cpp operators/TableScan.h operators/Selection.cpp
+        operators/Selection.h operators/HashJoin.cpp operators/HashJoin.h operators/Print.cpp
+        operators/Print.h operators/Operator.cpp operators/Operator.h )
 add_executable(runDatabase runDatabaseTest.cpp Types.cpp )
 
 #TARGET_LINK_LIBRARIES(runCompile ${Boost_LIBRARIES})

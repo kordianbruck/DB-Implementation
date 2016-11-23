@@ -1,4 +1,4 @@
-#include "Parser.hpp"
+#include "SchemaParser.hpp"
 
 #include <iostream>
 #include <iterator>
@@ -37,13 +37,13 @@ namespace literal {
 static Schema::Relation::Index* lastIndex = 0;
 static Schema::Relation* lastIndexRelation = 0;
 
-Parser::~Parser() {
+SchemaParser::~SchemaParser() {
     if (lastIndex != NULL) {
         delete lastIndex;
     }
 }
 
-std::unique_ptr<Schema> Parser::parse() {
+std::unique_ptr<Schema> SchemaParser::parse() {
     std::string token;
     unsigned line = 1;
     std::unique_ptr<Schema> s(new Schema());
@@ -96,7 +96,7 @@ static bool isInt(const std::string& str) {
     return str.find_first_not_of("0123456789") == std::string::npos;
 }
 
-void Parser::nextToken(unsigned line, const std::string& token, Schema& schema) {
+void SchemaParser::nextToken(unsigned line, const std::string& token, Schema& schema) {
     if (getenv("DEBUG")) {
         std::cerr << line << ": " << token << std::endl;
     }

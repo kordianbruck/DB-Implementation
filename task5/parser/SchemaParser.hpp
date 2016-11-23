@@ -1,5 +1,5 @@
-#ifndef H_Parser_hpp
-#define H_Parser_hpp
+#ifndef H_SchemaParser_hpp
+#define H_SchemaParser_hpp
 
 #include <exception>
 #include <string>
@@ -7,25 +7,10 @@
 #include <fstream>
 #include <sstream>
 #include "Schema.hpp"
+#include "ParserError.h"
 
-class ParserError : std::exception {
-    std::string msg;
-    unsigned line;
-public:
-    ParserError(unsigned line, const std::string &m) : msg(m), line(line) {}
 
-    ~ParserError() throw() {}
-
-    const char *what() const throw() {
-        return msg.c_str();
-    }
-
-    unsigned where() {
-        return line;
-    }
-};
-
-struct Parser {
+struct SchemaParser {
     std::string fileName;
     std::ifstream in;
     enum class State : unsigned {
@@ -66,9 +51,9 @@ struct Parser {
     };
     State state;
 
-    Parser(const std::string &fileName) : fileName(fileName), state(State::Init) {}
+    SchemaParser(const std::string &fileName) : fileName(fileName), state(State::Init) {}
 
-    ~Parser();
+    ~SchemaParser();
 
     std::unique_ptr<Schema> parse();
 

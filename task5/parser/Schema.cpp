@@ -1,6 +1,6 @@
 #include "Schema.hpp"
 
-#include "Parser.hpp"
+#include "SchemaParser.hpp"
 #include <iostream>
 
 using namespace std;

@@ -1,7 +1,7 @@
 
 #include <iostream>
-#include "parser/Parser.hpp"
-#include "parser/Query.h"
+#include "parser/SchemaParser.hpp"
+#include "parser/QueryParser.hpp"
 #include "operators/TableScan.h"
 #include "operators/HashJoin.h"
 #include "operators/Selection.h"
@@ -17,7 +17,7 @@ int main(int argc, char** argv) {
         argv[1] = (char*) "schema.sql";
     }
 
-    Parser p(argv[1]);
+    SchemaParser p(argv[1]);
     std::unique_ptr<Schema> schema;
     try {
         schema = p.parse();
@@ -34,6 +34,18 @@ int main(int argc, char** argv) {
         std::cerr << e.what() << " on line " << e.where() << std::endl;
     }
     std::cout << "All done" << std::endl << endl << endl;
+
+    QueryParser q;
+    try {
+        unique_ptr<Query> qu = q.parse("select w_id from warehouse;");
+        cout << qu.get()->toString() << endl << endl;
+        q.reset();
+        unique_ptr<Query> qu2 = q.parse("select o_id, ol_dist_info from order, orderline where o_id = ol_o_id and ol_d_id = o_d_id and o_w_id = ol_w_id and ol_number = 1 and ol_o_id = 100;");
+        cout << qu2.get()->toString();
+    } catch (ParserError& e) {
+        std::cerr << e.what() << " on line " << e.where() << std::endl;
+    }
+    return 0 ;
 
     /*
    vector<Schema::Relation::Attribute&> columnsCust{};

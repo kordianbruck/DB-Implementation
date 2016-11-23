@@ -14,7 +14,7 @@
 #include <chrono>
 #include <memory>
 
-#include "parser/Parser.hpp"
+#include "parser/SchemaParser.hpp"
 #include "parser/Schema.hpp"
 #include "db.h"
 #include "Types.hpp"

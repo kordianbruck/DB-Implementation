@@ -7,19 +7,23 @@
 
 #include <vector>
 #include <string>
-#include "Schema.hpp"
+#include <tuple>
+#include <sstream>
 
 using namespace std;
 
 class Query {
+    friend class QueryParser;
 
-    std::vector<Schema::Relation> relations;
+    vector<string> projection;
+    vector<string> relation;
+    vector<tuple<string, string>> selection;
+    vector<tuple<string, string>> joinConditions;
 
-    //ToDo
+public:
+    string toString() const;
 
-    std::string toString() const;
-
-    std::string generateQueryCode() const;
+    string generateQueryCode() const;
 };
 
 
