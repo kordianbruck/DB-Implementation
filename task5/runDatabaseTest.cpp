@@ -16,9 +16,9 @@
 
 #include "parser/SchemaParser.hpp"
 #include "parser/Schema.hpp"
-#include "db.h"
+#include "tmp/db.h"
 #include "Types.hpp"
-#include "query.h"
+#include "tmp/query_d9a5f4aef94db7eeb9cbd5dcf026a646.h"
 
 using namespace std;
 using namespace std::chrono;

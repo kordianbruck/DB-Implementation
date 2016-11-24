@@ -8,10 +8,8 @@ using namespace std;
 string Schema::type(const Schema::Relation::Attribute& attr, bool cpp) {
     Types::Tag type = attr.type;
     switch (type) {
-        case Types::Tag::Integer:
-            return "Integer";
-        case Types::Tag::Timestamp:
-            return "Timestamp";
+        case Types::Tag::Integer:return "Integer";
+        case Types::Tag::Timestamp:return "Timestamp";
         case Types::Tag::Numeric: {
             stringstream ss;
             if (!cpp) {
@@ -87,6 +85,7 @@ string Schema::generateDatabaseCode() const {
         << "#include <unordered_map>" << endl
         << "#include <tuple>" << endl
         << "#include <map>" << endl
+        << "#include <sstream>" << endl
         << "#include \"../Types.hpp\"" << endl
         << "#include \"../tupel_hash.h\"" << endl;
 
