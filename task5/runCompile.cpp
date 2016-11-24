@@ -17,9 +17,9 @@ int compileFile(string name, string outname) {
     if (f.good()) { // Only compile if not already on disk
         return 0;
     }
-
-    cout << "\trunning: " << "g++ -w -O3 -std=c++14 -fPIC -g tmp/" + name + " -shared -o tmp/" + outname << endl;
-    int status = system(("g++ -w -O3 -std=c++14 -fPIC -g tmp/" + name + " -shared -o tmp/" + outname).c_str());
+    //Debug symbols: -g / Additional: -flto  -pipe
+    cout << "\trunning: " << "g++ -w -O3 -std=c++14 -fPIC -pipe -flto tmp/" + name + " -shared -o tmp/" + outname << endl;
+    int status = system(("g++ -O3 -std=c++14 -fPIC -flto  -pipe tmp/" + name + " -shared -o tmp/" + outname).c_str());
 
     return status;
 }
@@ -106,7 +106,7 @@ string parseAndWriteQuery(const string& query, Schema* s) {
     myfile << "#include <map>" << endl;
     myfile << "#include <iostream>" << endl;
     myfile << "#include <tuple>" << endl
-           << "#include \"db.h\"" << endl
+           << "#include \"db.cpp\"" << endl
            << "#include \"../Types.hpp\"" << endl
            << "#include <algorithm>" << endl;
     myfile << "using namespace std;" << endl;
@@ -138,6 +138,10 @@ int main(int argc, char** argv) {
 
     string line;
     while (getline(cin, line)) {
+        if(line == "exit") {
+            break;
+        }
+
         try {
             string file = parseAndWriteQuery(line, schema);
             if (compileFile(file + ".cpp", file + ".so") == 0) {
