@@ -10,8 +10,10 @@ class Selection:public  Operator  {
     vector<tuple<IU*, string>>& conditions;
 
 public:
-    Selection(Operator& input, vector<tuple<IU*, string>>& condition);
-    ~Selection() override{};
+    Selection(Operator& input, vector<tuple<IU*, string>> condition);
+    ~Selection() override{
+        delete &input;
+    };
 
     string produce() override;
     string consume(Operator&) override;

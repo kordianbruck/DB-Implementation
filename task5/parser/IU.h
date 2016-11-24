@@ -11,10 +11,6 @@
 using namespace std;
 
 struct IU {
-    IU(TableScan* rel, Schema::Relation::Attribute* attr) : rel(rel), attr(attr) {
-
-    }
-
     TableScan* rel;
     Schema::Relation::Attribute* attr;
 };

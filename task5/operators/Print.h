@@ -15,7 +15,9 @@ class Print : Operator {
 public:
     Print(Operator&, vector<IU*>&);
 
-    ~Print() override {};
+    ~Print() override {
+        delete &input;
+    };
 
     string produce() override;
 

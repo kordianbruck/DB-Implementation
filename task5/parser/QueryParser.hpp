@@ -36,7 +36,7 @@ class QueryParser {
 public:
     QueryParser() : state(State::Init) { }
 
-    unique_ptr<Query> parse(const string& query);
+    unique_ptr<Query> parse(const string& query, Schema* schema);
 
     void reset();
 };

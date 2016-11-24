@@ -87,8 +87,8 @@ string Schema::generateDatabaseCode() const {
         << "#include <unordered_map>" << endl
         << "#include <tuple>" << endl
         << "#include <map>" << endl
-        << "#include \"Types.hpp\"" << endl
-        << "#include \"tupel_hash.h\"" << endl;
+        << "#include \"../Types.hpp\"" << endl
+        << "#include \"../tupel_hash.h\"" << endl;
 
 
     out << "struct Database {" << endl;

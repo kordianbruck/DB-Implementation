@@ -9,7 +9,7 @@
 
 using namespace std;
 
-HashJoin::HashJoin(Operator& left, Operator& right, vector<tuple<IU*, IU*>>& conditions) : left(left), right(right), conditions(conditions) {
+HashJoin::HashJoin(Operator& left, Operator& right, vector<tuple<IU*, IU*>> conditions) : left(left), right(right), conditions(conditions) {
     left.setConsumer(this);
     right.setConsumer(this);
     for (auto& c : conditions) {

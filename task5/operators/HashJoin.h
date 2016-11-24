@@ -20,8 +20,11 @@ class HashJoin : public  Operator {
     set<IU*> intersectDeps();
 
 public:
-    HashJoin(Operator& left, Operator& right, vector<tuple<IU*, IU*>>& conditions);
-    ~HashJoin() override{};
+    HashJoin(Operator& left, Operator& right, vector<tuple<IU*, IU*>> conditions);
+    ~HashJoin() override{
+        delete &left;
+        delete &right;
+    };
 
     string produce() override;
     string consume(Operator&) override;

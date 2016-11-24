@@ -16,8 +16,8 @@ namespace literal {
     const char Equals = '=';
 }
 
-unique_ptr<Query> QueryParser::parse(const string& query) {
-    unique_ptr<Query> q(new Query());
+unique_ptr<Query> QueryParser::parse(const string& query, Schema* schema) {
+    unique_ptr<Query> q(new Query(schema));
     string token;
     std::stringstream queryStream(query);
     unsigned line = 1;

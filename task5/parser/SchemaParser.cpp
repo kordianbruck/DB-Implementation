@@ -43,10 +43,10 @@ SchemaParser::~SchemaParser() {
     }
 }
 
-std::unique_ptr<Schema> SchemaParser::parse() {
+Schema* SchemaParser::parse() {
     std::string token;
     unsigned line = 1;
-    std::unique_ptr<Schema> s(new Schema());
+    Schema* s = new Schema();
     in.open(fileName.c_str());
     if (!in.is_open()) {
         throw ParserError(line, "cannot open file '" + fileName + "'");
@@ -68,7 +68,7 @@ std::unique_ptr<Schema> SchemaParser::parse() {
     in.close();
 
 
-    return std::move(s);
+    return s;
 }
 
 static bool isIdentifier(const std::string& str) {

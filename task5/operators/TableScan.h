@@ -11,8 +11,7 @@
 
 
 class TableScan: public Operator  {
-    Schema::Relation relation;
-
+    Schema::Relation& relation;
 
 public:
     TableScan(Schema::Relation&);

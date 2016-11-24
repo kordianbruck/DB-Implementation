@@ -1,5 +1,5 @@
 tbl/
 build/
-db.h
+tmp/
 query.h
 *.kate-swp

@@ -3,7 +3,7 @@
 #include "Selection.h"
 #include "../parser/IU.h"
 
-Selection::Selection(Operator& input, vector<tuple<IU*, string>>& cond) : input(input), conditions(cond) {
+Selection::Selection(Operator& input, vector<tuple<IU*, string>> cond) : input(input), conditions(cond) {
     input.setConsumer(this);
     for (auto& c : conditions) {
         this->required.insert(get<0>(c));
