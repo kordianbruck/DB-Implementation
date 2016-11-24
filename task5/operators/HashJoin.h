@@ -14,17 +14,13 @@ using namespace std;
 class HashJoin : public  Operator {
     Operator& left;
     Operator& right;
-    vector<tuple<IU*, IU*>>& conditions;
+    vector<tuple<IU*, IU*>> conditions;
     string mapName;
 
     set<IU*> intersectDeps();
 
 public:
     HashJoin(Operator& left, Operator& right, vector<tuple<IU*, IU*>> conditions);
-    ~HashJoin() override{
-        delete &left;
-        delete &right;
-    };
 
     string produce() override;
     string consume(Operator&) override;

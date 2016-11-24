@@ -75,7 +75,8 @@ void QueryParser::nextToken(const string& token, Query& query) {
         Semicolon
      */
     switch (state) {
-        case State::Semicolon:throw ParserError(0, "Cannot continue query after semicolon '" + token + "'");
+        case State::Semicolon:
+            throw ParserError(0, "Cannot continue query after semicolon '" + token + "'");
         case State::Init:
             if (tok == keyword::Select) {
                 state = State::SelectItem;
@@ -145,6 +146,8 @@ void QueryParser::nextToken(const string& token, Query& query) {
             break;
         case State::WhereRight:
             if (isValue(tok)) {
+                tok = token;
+                replace(tok.begin(), tok.end(), '\'', '"');
                 query.selection.push_back(make_tuple(leftPredicate, tok));
                 leftPredicate = "";
                 state = State::WhereAnd;
@@ -156,7 +159,8 @@ void QueryParser::nextToken(const string& token, Query& query) {
                 throw ParserError(0, "Expected constant or right predicate, found '" + token + "'");
             }
             break;
-        default:throw ParserError(0, "Missing state in query parser for token '" + token + "'");
+        default:
+            throw ParserError(0, "Missing state in query parser for token '" + token + "'");
             break;
     }
 }

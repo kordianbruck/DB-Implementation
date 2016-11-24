@@ -8,6 +8,7 @@
 #include <sstream>
 #include <algorithm>
 #include <random>
+#include <memory>
 #include "../parser/Schema.hpp"
 
 struct IU; // Predeclare struct
@@ -16,7 +17,7 @@ using namespace std;
 
 class Operator {
 public:
-    virtual ~Operator() {};
+    virtual ~Operator() { };
 
     virtual string produce() = 0;
 
