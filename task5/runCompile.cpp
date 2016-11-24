@@ -134,7 +134,7 @@ int main(int argc, char** argv) {
     }
     cout << "DB should be ready." << endl << endl;
 
-    cout << "Enter a sql query: " << endl;
+    cout << "Enter a sql query or 'exit' to quit: " << endl;
     cout << ">";
 
     string line;
