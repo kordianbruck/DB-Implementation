@@ -86,7 +86,7 @@ Schema* parseAndWriteSchema(const string& schemaFile) {
     }
 
     compileFile("db.cpp", "db.so");
-    cout << "DB ready" << endl << endl;
+    cout << "DB ready for loading." << endl << endl;
     return schema;
 }
 
@@ -132,13 +132,14 @@ int main(int argc, char** argv) {
         cout << "aborting due to schema failed to load" << endl;
         return 1;
     }
+    cout << "DB should be ready." << endl << endl;
 
     cout << "Enter a sql query: " << endl;
     cout << ">";
 
     string line;
     while (getline(cin, line)) {
-        if(line == "exit") {
+        if (line == "exit") {
             break;
         }
 
