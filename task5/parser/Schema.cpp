@@ -8,8 +8,10 @@ using namespace std;
 string Schema::type(const Schema::Relation::Attribute& attr, bool cpp) {
     Types::Tag type = attr.type;
     switch (type) {
-        case Types::Tag::Integer:return "Integer";
-        case Types::Tag::Timestamp:return "Timestamp";
+        case Types::Tag::Integer:
+            return "Integer";
+        case Types::Tag::Timestamp:
+            return "Timestamp";
         case Types::Tag::Numeric: {
             stringstream ss;
             if (!cpp) {
@@ -88,7 +90,6 @@ string Schema::generateDatabaseCode() const {
         << "#include <sstream>" << endl
         << "#include \"../Types.hpp\"" << endl
         << "#include \"../tupel_hash.h\"" << endl;
-
 
     out << "struct Database {" << endl;
     out << "private: " << endl;
@@ -233,6 +234,14 @@ string Schema::generateDatabaseCode() const {
     out << "    }" << endl; // End import()
 
     out << "};" << endl; // End struct Database
+
+    //Allow db to be loaded dynamically
+    out << "extern \"C\" Database* make_database(std::string filename) {\n"
+            "    Database* db = new Database();\n"
+            "    db->import(filename);\n"
+            "    return db;\n"
+            "}";
+
     return out.str();
 }
 

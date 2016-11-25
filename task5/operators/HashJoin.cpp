@@ -12,6 +12,7 @@ using namespace std;
 HashJoin::HashJoin(Operator& left, Operator& right, vector<tuple<IU*, IU*>> conditions) : left(left), right(right), conditions(conditions) {
     left.setConsumer(this);
     right.setConsumer(this);
+
     for (auto& c : conditions) {
         this->required.insert(get<0>(c));
         this->required.insert(get<1>(c));

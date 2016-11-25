@@ -81,7 +81,7 @@ string Query::generateQueryCode() {
 
         //If we got matching selections, why not directly add them with a selection
         if (selectionConditions.size() > 0) {
-            ops.push(new Selection(*ts, selectionConditions));
+            ops.push(new Selection(shared_ptr<TableScan>(ts), selectionConditions));
         } else {
             ops.push(ts);
         }
@@ -124,6 +124,13 @@ string Query::generateQueryCode() {
 
     //Create a printer that will output our projections
     Print result = Print(*ops.top(), projections);
+    string ret = result.produce();
 
-    return result.produce();
+
+    while (ops.size() > 0) {
+        auto e = ops.top();
+        delete e;
+        ops.pop();
+    }
+    return ret;
 }

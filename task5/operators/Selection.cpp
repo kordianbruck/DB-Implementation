@@ -3,17 +3,17 @@
 #include "Selection.h"
 #include "../parser/IU.h"
 
-Selection::Selection(Operator& input, vector<tuple<IU*, string>> cond) : input(input), conditions(cond) {
-    input.setConsumer(this);
+Selection::Selection(shared_ptr<Operator> in, vector<tuple<IU*, string>> cond) : input(in), conditions(cond) {
+    input->setConsumer(this);
     for (auto& c : conditions) {
         this->required.insert(get<0>(c));
     }
-    this->produced.insert(input.getProduced().begin(), input.getProduced().end());
+    this->produced.insert(input->getProduced().begin(), input->getProduced().end());
 }
 
 string Selection::produce() {
     this->required.insert(consumer->getRequired().begin(), consumer->getRequired().end());
-    return input.produce();
+    return input->produce();
 }
 
 string Selection::consume(Operator& op) {

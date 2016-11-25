@@ -6,14 +6,11 @@
 #include "TableScan.h"
 
 class Selection:public  Operator  {
-    Operator& input;
-    vector<tuple<IU*, string>>& conditions;
+    shared_ptr<Operator> input;
+    vector<tuple<IU*, string>> conditions;
 
 public:
-    Selection(Operator& input, vector<tuple<IU*, string>> condition);
-    ~Selection() override{
-        delete &input;
-    };
+    Selection(shared_ptr<Operator> input, vector<tuple<IU*, string>> condition);
 
     string produce() override;
     string consume(Operator&) override;

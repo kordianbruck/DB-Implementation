@@ -8,13 +8,12 @@ add_executable(runCompile runCompile.cpp Types.cpp table_types.hpp parser/Schema
         operators/TableScan.cpp operators/TableScan.h operators/Selection.cpp
         operators/Selection.h operators/HashJoin.cpp operators/HashJoin.h operators/Print.cpp
         operators/Print.h operators/Operator.cpp operators/Operator.h )
-add_executable(runDatabase runDatabaseTest.cpp Types.cpp )
 
 #TARGET_LINK_LIBRARIES(runCompile ${Boost_LIBRARIES})
 #TARGET_LINK_LIBRARIES(runDatabase ${Boost_LIBRARIES})
 
 SET(CMAKE_CXX_FLAGS "-std=c++1y")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -fshow-column -pipe -march=native")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -fshow-column -pipe -march=native -ldl -lrt")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENABLE_DEBUG_MACRO -fsanitize=undefined -fsanitize=address -fsanitize=leak -ggdb3 -O0 -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -flto -DNDEBUG -ggdb")
 
