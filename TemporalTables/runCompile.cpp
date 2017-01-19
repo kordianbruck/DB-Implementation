@@ -18,7 +18,7 @@ int compileFile(string name, string outname) {
         return 0;
     }
     //Debug symbols: -g / Additional: -flto  -pipe
-    cout << "\trunning: " << "g++ -w -O3 -std=c++14 -fPIC -pipe -flto tmp/" + name + " -shared -o tmp/" + outname << endl;
+    //cout << "\trunning: " << "g++ -w -O3 -std=c++14 -fPIC -pipe -flto tmp/" + name + " -shared -o tmp/" + outname << endl;
     int status = system(("g++ -O3 -std=c++14 -fPIC -flto  -pipe tmp/" + name + " -shared -o tmp/" + outname).c_str());
 
     return status;
@@ -81,12 +81,17 @@ Schema* parseAndWriteSchema(const string& schemaFile) {
         myfile.open("tmp/db.cpp");
         myfile << schema->generateDatabaseCode();
         myfile.close();
+
+        //cout << "Compiling." << endl << endl;
+        compileFile("db.cpp", "db.so");
+        cout << "Schema ready for loading." << endl << endl;
     } catch (ParserError& e) {
         cerr << e.what() << " on line " << e.where() << endl;
+    } catch (char const* msg) {
+        cerr << "Error: " << msg << endl;
+        schema = nullptr;
     }
 
-    compileFile("db.cpp", "db.so");
-    cout << "DB ready for loading." << endl << endl;
     return schema;
 }
 
@@ -119,7 +124,7 @@ string parseAndWriteQuery(const string& query, Schema* s) {
 
 int main(int argc, char** argv) {
     if (argc != 2) {
-        argv[1] = (char*) "script/schema.sql";
+        argv[1] = (char*) "./script/schema_sys_time.sql";
     }
 
     cout << "TPC-C Compile" << endl;
@@ -127,7 +132,17 @@ int main(int argc, char** argv) {
 
     //Load our schema, parse it and get it localally so we can parse queries on that schmea
     Schema* schema = parseAndWriteSchema(argv[1]);
-    Database* db = loadAndRunDb("db.so");
+    if (schema == nullptr) {
+        return 1;
+    }
+
+    Database* db;
+    try {
+        db = loadAndRunDb("db.so");
+    } catch (char const* msg) {
+        cerr << "Error: " << msg << endl;
+        db = nullptr;
+    }
     if (db == nullptr) {
         cout << "aborting due to schema failed to load" << endl;
         return 1;
@@ -142,17 +157,18 @@ int main(int argc, char** argv) {
         if (line == "exit") {
             break;
         }
-
-        try {
-            string file = parseAndWriteQuery(line, schema);
-            if (compileFile(file + ".cpp", file + ".so") == 0) {
-                cout << "Compiled into: " << file << ". running... " << endl;
-                loadAndRunQuery(file + ".so", db);
-            } else {
-                cout << "Compilation failed..." << endl;
+        if (line != "") {
+            try {
+                string file = parseAndWriteQuery(line, schema);
+                if (compileFile(file + ".cpp", file + ".so") == 0) {
+                    cout << "Compiled into: " << file << ". running... " << endl;
+                    loadAndRunQuery(file + ".so", db);
+                } else {
+                    cout << "Compilation failed..." << endl;
+                }
+            } catch (ParserError& e) {
+                cerr << e.what() << " on line " << e.where() << endl;
             }
-        } catch (ParserError& e) {
-            cerr << e.what() << " on line " << e.where() << endl;
         }
 
         //Add a new placeholder for a new command
@@ -162,8 +178,11 @@ int main(int argc, char** argv) {
     //parseAndWriteQuery("select w_id from warehouse;", schema);
     //parseAndWriteQuery("select c_id, c_first, c_middle, c_last from customer where c_last = 'BARBARBAR';", schema);
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdelete-incomplete"
     delete schema;
     delete db;
+#pragma GCC diagnostic pop
 
     return 0;
 }

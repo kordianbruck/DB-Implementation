@@ -10,6 +10,9 @@ string Schema::type(const Schema::Relation::Attribute& attr, bool cpp) {
     switch (type) {
         case Types::Tag::Integer:
             return "Integer";
+        case Types::Tag::Datetime:
+        case Types::Tag::Date:
+            return "Date";
         case Types::Tag::Timestamp:
             return "Timestamp";
         case Types::Tag::Numeric: {
@@ -67,10 +70,12 @@ string Schema::toString() const {
             out << ' ' << rel.attributes[keyId].name;
         }
         out << endl;
+        cout << out.str();
         out << "\tColumns: " << endl;
         for (const auto& attr : rel.attributes) {
             out << "\t\t" << attr.name << '\t' << type(attr) << (attr.notNull ? " not null" : "") << endl;
         }
+        cout << out.str();
     }
     return out.str();
 }

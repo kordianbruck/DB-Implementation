@@ -8,13 +8,13 @@
 using namespace std;
 
 //---------------------------------------------------------------------------
-std::ostream &operator<<(std::ostream &out, const Integer &value) {
+std::ostream& operator<<(std::ostream& out, const Integer& value) {
     out << value.value;
     return out;
 }
 
 //---------------------------------------------------------------------------
-Integer Integer::castString(const char *str, uint32_t strLen)
+Integer Integer::castString(const char* str, uint32_t strLen)
 // Cast a string to an integer value
 {
     auto iter = str, limit = str + strLen;
@@ -84,7 +84,7 @@ static unsigned mergeJulianDay(unsigned year, unsigned month, unsigned day)
 }
 
 //---------------------------------------------------------------------------
-static void splitJulianDay(unsigned jd, unsigned &year, unsigned &month, unsigned &day)
+static void splitJulianDay(unsigned jd, unsigned& year, unsigned& month, unsigned& day)
 // Algorithm from the Calendar FAQ
 {
     unsigned a = jd + 32044;
@@ -100,7 +100,7 @@ static void splitJulianDay(unsigned jd, unsigned &year, unsigned &month, unsigne
 }
 
 //---------------------------------------------------------------------------
-Integer extractYear(const Date &d) {
+Integer extractYear(const Date& d) {
     unsigned year, month, day;
     splitJulianDay(d.value, year, month, day);
     Integer r(year);
@@ -108,7 +108,7 @@ Integer extractYear(const Date &d) {
 }
 
 //---------------------------------------------------------------------------
-std::ostream &operator<<(std::ostream &out, const Date &value)
+std::ostream& operator<<(std::ostream& out, const Date& value)
 // Output
 {
     unsigned year, month, day;
@@ -120,7 +120,7 @@ std::ostream &operator<<(std::ostream &out, const Date &value)
 }
 
 //---------------------------------------------------------------------------
-Date Date::castString(const char *str, uint32_t strLen)
+Date Date::castString(const char* str, uint32_t strLen)
 // Cast a string to a date
 {
     auto iter = str, limit = str + strLen;
@@ -169,120 +169,19 @@ Date Date::castString(const char *str, uint32_t strLen)
 }
 
 //---------------------------------------------------------------------------
-Timestamp Timestamp::castString(const char *str, uint32_t strLen)
-// Cast a string to a timestamp value
-{
-    return Timestamp(Integer::castString(str, strLen).value); // only accept integers for now
-
-    if ((strLen == 4) && (strncmp(str, "NULL", 4) == 0)) {
-        return null();
-    }
-
-    auto iter = str, limit = str + strLen;
-
-    // Trim WS
-    while ((iter != limit) && ((*iter) == ' ')) { ++iter; }
-    while ((iter != limit) && ((*(limit - 1)) == ' ')) { --limit; }
-
-    // Year
-    unsigned year = 0;
-    while (true) {
-        if (iter == limit) { throw "invalid timestamp format"; }
-        char c = *(iter++);
-        if (c == '-') { break; }
-        if ((c >= '0') && (c <= '9')) {
-            year = 10 * year + (c - '0');
-        } else { throw "invalid timestamp format"; }
-    }
-    // Month
-    unsigned month = 0;
-    while (true) {
-        if (iter == limit) { throw "invalid timestamp format"; }
-        char c = *(iter++);
-        if (c == '-') { break; }
-        if ((c >= '0') && (c <= '9')) {
-            month = 10 * month + (c - '0');
-        } else { throw "invalid timestamp format"; }
-    }
-    // Day
-    unsigned day = 0;
-    while (true) {
-        if (iter == limit) { break; }
-        char c = *(iter++);
-        if (c == ' ') { break; }
-        if ((c >= '0') && (c <= '9')) {
-            day = 10 * day + (c - '0');
-        } else { throw "invalid timestamp format"; }
-    }
-
-    // Range check
-    if ((year > 9999) || (month < 1) || (month > 12) || (day < 1) || (day > 31)) {
-        throw "invalid timestamp format";
-    }
-    uint64_t date = mergeJulianDay(year, month, day);
-
-    // Hour
-    unsigned hour = 0;
-    while (true) {
-        if (iter == limit) { throw "invalid timestamp format"; }
-        char c = *(iter++);
-        if (c == ':') { break; }
-        if ((c >= '0') && (c <= '9')) {
-            hour = 10 * hour + (c - '0');
-        } else { throw "invalid timestamp format"; }
-    }
-    // Minute
-    unsigned minute = 0;
-    while (true) {
-        if (iter == limit) { throw "invalid timestamp format"; }
-        char c = *(iter++);
-        if (c == ':') { break; }
-        if ((c >= '0') && (c <= '9')) {
-            minute = 10 * minute + (c - '0');
-        } else { throw "invalid timestamp format"; }
-    }
-    // Second
-    unsigned second = 0;
-    while (true) {
-        if (iter == limit) { break; }
-        char c = *(iter++);
-        if (c == '.') { break; }
-        if ((c >= '0') && (c <= '9')) {
-            second = 10 * second + (c - '0');
-        } else { throw "invalid timestamp format"; }
-    }
-    // Millisecond
-    unsigned ms = 0;
-    while (iter != limit) {
-        char c = *(iter++);
-        if ((c >= '0') && (c <= '9')) {
-            ms = 10 * ms + (c - '0');
-        } else { throw "invalid timestamp format"; }
-    }
-
-    // Range check
-    if ((hour >= 24) || (minute >= 60) || (second >= 60) || (ms >= 1000)) {
-        throw "invalid timestamp format";
-    }
-    uint64_t time = mergeTime(hour, minute, second, ms);
-
-    // Merge
-    Timestamp t;
-    t.value = (date * msPerDay) + time;
-    return t;
+Timestamp Timestamp::castString(const char* str, uint32_t strLen) { // Cast a string to a timestamp value
+    return Timestamp(Integer::castString(str, strLen).value);
 }
 
 //---------------------------------------------------------------------------
-Timestamp Timestamp::null()
-// NULL
-{
+Timestamp Timestamp::null() { // NULL
     Timestamp result;
     result.value = 0;
     return result;
 }
 
 //---------------------------------------------------------------------------
-static void splitTime(unsigned value, unsigned &hour, unsigned &minute, unsigned &second, unsigned &ms)
+static void splitTime(unsigned value, unsigned& hour, unsigned& minute, unsigned& second, unsigned& ms)
 // Split ms since midnight
 {
     ms = value % 1000;
@@ -295,7 +194,7 @@ static void splitTime(unsigned value, unsigned &hour, unsigned &minute, unsigned
 }
 
 //---------------------------------------------------------------------------
-std::ostream &operator<<(std::ostream &out, const Timestamp &value)
+std::ostream& operator<<(std::ostream& out, const Timestamp& value)
 // Output
 {
     if (value == Timestamp::null()) {

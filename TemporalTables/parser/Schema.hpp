@@ -10,7 +10,7 @@ using namespace std;
 
 namespace Types {
     enum class Tag : unsigned {
-        Integer, Char, Numeric, Varchar, Date, Timestamp
+        Integer, Char, Numeric, Varchar, Date, Timestamp, Datetime
     };
 }
 
@@ -21,16 +21,20 @@ struct Schema {
             Types::Tag type;
             unsigned len1;
             unsigned len2;
+
+            bool generated;
+            bool generatedStart;
+            bool generatedEnd;
             bool notNull;
 
-            Attribute() : len1(~0), len2(~0), notNull(true) {}
+            Attribute() : len1(0), len2(0), notNull(true), generated(false), generatedStart(false), generatedEnd(false) { }
         };
 
         struct Index {
             std::string name;
             std::vector<unsigned> keys;
 
-            Index(const std::string& name) : name(name) {}
+            Index(const std::string& name) : name(name) { }
         };
 
         std::string name;
@@ -38,10 +42,14 @@ struct Schema {
         std::vector<unsigned> primaryKey;
         std::vector<Index> indexes;
 
+        bool systemVersioning = false;
+        std::pair<int, int> systemVersioningPeriod;
+
         int findAttributeIndex(const std::string& name);
+
         Schema::Relation::Attribute& findAttribute(const std::string& name);
 
-        Relation(const std::string& name) : name(name) {}
+        Relation(const std::string& name) : name(name) { }
     };
 
     std::vector<Schema::Relation> relations;

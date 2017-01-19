@@ -25,6 +25,22 @@ namespace keyword {
     const std::string Varchar = "varchar";
     const std::string Date = "date";
     const std::string Timestamp = "timestamp";
+    const std::string Datetime = "datetime";
+
+    //System Versioning
+    const std::string With = "with";
+    const std::string System_Versioning = "system_versioning";
+    const std::string On = "on";
+    const std::string Off = "off";
+    const std::string Period = "period";
+    const std::string For = "for";
+    const std::string System_Time = "system_time";
+    const std::string Generated = "generated";
+    const std::string Always = "always";
+    const std::string As = "as";
+    const std::string Row = "row";
+    const std::string Start = "start";
+    const std::string End = "end";
 }
 
 namespace literal {
@@ -32,6 +48,7 @@ namespace literal {
     const char ParenthesisRight = ')';
     const char Comma = ',';
     const char Semicolon = ';';
+    const char Equals = '=';
 }
 
 static Schema::Relation::Index* lastIndex = 0;
@@ -85,7 +102,22 @@ static bool isIdentifier(const std::string& str) {
             str == keyword::Timestamp ||
             str == keyword::Date ||
             str == keyword::Numeric ||
-            str == keyword::Char
+            str == keyword::Char ||
+
+            //Sys Versioning
+            str == keyword::With ||
+            str == keyword::System_Versioning ||
+            str == keyword::On ||
+            str == keyword::Off ||
+            str == keyword::Period ||
+            str == keyword::For ||
+            str == keyword::System_Time ||
+            str == keyword::Generated ||
+            str == keyword::Always ||
+            str == keyword::As ||
+            str == keyword::Row ||
+            str == keyword::Start ||
+            str == keyword::End
             ) {
         return false;
     }
@@ -97,14 +129,14 @@ static bool isInt(const std::string& str) {
 }
 
 void SchemaParser::nextToken(unsigned line, const std::string& token, Schema& schema) {
-    if (getenv("DEBUG")) {
-        std::cerr << line << ": " << token << std::endl;
-    }
+    //std::cerr << line << ": " << token << std::endl;
+
     if (token.empty()) {
         return;
     }
     std::string tok;
     std::transform(token.begin(), token.end(), std::back_inserter(tok), ::tolower);
+
     switch (state) {
         case State::Semicolon: /* fallthrough */
         case State::Init:
@@ -150,7 +182,7 @@ void SchemaParser::nextToken(unsigned line, const std::string& token, Schema& sc
             }
             break;
         case State::IndexName:
-            if (isIdentifier(tok)) {
+            if (tok == keyword::On) {
                 state = State::IndexOn;
             } else {
                 throw ParserError(line, "Expected 'on', found '" + token + "'");
@@ -205,6 +237,8 @@ void SchemaParser::nextToken(unsigned line, const std::string& token, Schema& sc
                 state = State::CreateTableEnd;
             } else if (tok == keyword::Primary) {
                 state = State::Primary;
+            } else if (tok == keyword::Period) {
+                state = State::PeriodStart;
             } else if (isIdentifier(tok)) {
                 schema.relations.back().attributes.push_back(Schema::Relation::Attribute());
                 schema.relations.back().attributes.back().name = token;
@@ -216,8 +250,10 @@ void SchemaParser::nextToken(unsigned line, const std::string& token, Schema& sc
         case State::CreateTableEnd:
             if (tok.size() == 1 && tok[0] == literal::Semicolon) {
                 state = State::Semicolon;
+            } else if (tok == keyword::With) {
+                state = State::WithStart;
             } else {
-                throw ParserError(line, "Expected ';', found '" + token + "'");
+                throw ParserError(line, "Expected ';' OR WITH, found '" + token + "'");
             }
             break;
         case State::Primary:
@@ -294,6 +330,9 @@ void SchemaParser::nextToken(unsigned line, const std::string& token, Schema& sc
             } else if (tok == keyword::Date) {
                 schema.relations.back().attributes.back().type = Types::Tag::Date;
                 state = State::AttributeTypeInt;
+            } else if (tok == keyword::Datetime) {
+                schema.relations.back().attributes.back().type = Types::Tag::Datetime;
+                state = State::AttributeTypeDatetime;
             } else { throw ParserError(line, "Expected type after attribute name, found '" + token + "'"); }
             break;
         case State::AttributeTypeChar:
@@ -355,6 +394,132 @@ void SchemaParser::nextToken(unsigned line, const std::string& token, Schema& sc
                 throw ParserError(line, "Expected second length for NUMERIC type, found'" + token + "'");
             }
             break;
+
+        case State::AttributeTypeDatetime:
+            if (tok.size() == 1 && tok[0] == literal::Comma) {
+                state = State::Separator;
+            } else if (tok == keyword::Not) {
+                state = State::Not;
+            } else if (tok == keyword::Generated) {
+                schema.relations.back().attributes.back().generated = true;
+                state = State::SysTime1;
+            } else { throw ParserError(line, "Expected ',' or 'NOT NULL' after attribute type, found '" + token + "'"); }
+            break;
+        case State::SysTime1:
+            if (tok == keyword::Always) {
+                state = State::SysTime2;
+            } else { throw ParserError(line, "Expected ALWAYS after GENERATED, found '" + token + "'"); }
+            break;
+        case State::SysTime2:
+            if (tok == keyword::As) {
+                state = State::SysTime3;
+            } else { throw ParserError(line, "Expected ALWAYS after GENERATED, found '" + token + "'"); }
+            break;
+        case State::SysTime3:
+            if (tok == keyword::Row) {
+                state = State::SysTime4;
+            } else { throw ParserError(line, "Expected ALWAYS after GENERATED, found '" + token + "'"); }
+            break;
+        case State::SysTime4:
+            if (tok == keyword::Start) {
+                schema.relations.back().attributes.back().generatedStart = true;
+                state = State::SysTimeEnd;
+            } else if (tok == keyword::End) {
+                schema.relations.back().attributes.back().generatedEnd = true;
+                state = State::SysTimeEnd;
+            } else { throw ParserError(line, "Expected START or END after ROW, found '" + token + "'"); }
+            break;
+        case State::PeriodStart:
+            if (tok == keyword::For) {
+                state = State::PeriodStart1;
+            } else { throw ParserError(line, "Expected FOR, found '" + token + "'"); }
+            break;
+        case State::PeriodStart1:
+            if (tok == keyword::System_Time) {
+                state = State::PeriodStart2;
+            } else { throw ParserError(line, "Expected SYSTEM_TIME, found '" + token + "'"); }
+            break;
+        case State::PeriodStart2:
+            if (tok.size() == 1 && tok[0] == literal::ParenthesisLeft) {
+                state = State::PeriodStart3;
+            } else {
+                throw ParserError(line, "Expected '(', found '" + token + "'");
+            }
+            break;
+        case State::PeriodStart3:
+            if (isIdentifier(tok)) {
+                schema.relations.back().systemVersioningPeriod.first = schema.relations.back().findAttributeIndex(token);
+                state = State::PeriodStart4;
+            } else { throw ParserError(line, "Expected first Column Name, found '" + token + "'"); }
+            break;
+        case State::PeriodStart4:
+            if (tok.size() == 1 && tok[0] == literal::Comma) {
+                state = State::PeriodStart5;
+            } else {
+                throw ParserError(line, "Expected ',', found '" + token + "'");
+            }
+            break;
+        case State::PeriodStart5:
+            if (isIdentifier(tok)) {
+                auto rel = schema.relations.back();
+                schema.relations.back().systemVersioningPeriod.second = schema.relations.back().findAttributeIndex(token);
+                state = State::PeriodStart6;
+            } else { throw ParserError(line, "Expected second Column Name, found '" + token + "'"); }
+            break;
+        case State::PeriodStart6:
+            if (tok.size() == 1 && tok[0] == literal::ParenthesisRight) {
+                state = State::SysTimeEnd;
+            } else {
+                throw ParserError(line, "Expected ')', found '" + token + "'");
+            }
+            break;
+        case State::WithStart:
+            if (tok.size() == 1 && tok[0] == literal::ParenthesisLeft) {
+                state = State::WithParLeft;
+            } else {
+                throw ParserError(line, "Expected '(', found '" + token + "'");
+            }
+            break;
+        case State::WithParLeft:
+            if (tok == keyword::System_Versioning) {
+                state = State::WithSysVersioning;
+            } else {
+                throw ParserError(line, "Expected SYSTEM_VERSIONING, found '" + token + "'");
+            }
+            break;
+        case State::WithSysVersioning:
+            if (tok.size() == 1 && tok[0] == literal::Equals) {
+                state = State::WithSysVersioningEquals;
+            } else {
+                throw ParserError(line, "Expected '=', found '" + token + "'");
+            }
+            break;
+        case State::WithSysVersioningEquals:
+            if (tok == keyword::On) {
+                state = State::WithEnd;
+                schema.relations.back().systemVersioning = true;
+            } else if (tok == keyword::Off) {
+                state = State::WithEnd;
+                schema.relations.back().systemVersioning = false;
+            } else {
+                throw ParserError(line, "Expected ON or OFF, found '" + token + "'");
+            }
+            break;
+        case State::WithEnd:
+            if (tok.size() == 1 && tok[0] == literal::ParenthesisRight) {
+                state = State::AfterWith;
+            } else {
+                throw ParserError(line, "Expected ')', found '" + token + "'");
+            }
+            break;
+        case State::AfterWith:
+            if (tok.size() == 1 && tok[0] == literal::Semicolon) {
+                state = State::Semicolon;
+            } else {
+                throw ParserError(line, "Expected ')', found '" + token + "'");
+            }
+            break;
+        case State::SysTimeEnd:
         case State::CharEnd: /* fallthrough */
         case State::NumericEnd: /* fallthrough */
         case State::AttributeTypeInt:

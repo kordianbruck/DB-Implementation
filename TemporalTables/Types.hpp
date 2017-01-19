@@ -39,60 +39,60 @@ class Integer {
 public:
     int32_t value;
 
-    Integer() {}
+    Integer() { }
 
-    Integer(int32_t value) : value(value) {}
+    Integer(int32_t value) : value(value) { }
 
     /// Hash
     inline uint64_t hash() const;
 
     /// Comparison
-    inline bool operator==(const Integer &n) const { return value == n.value; }
+    inline bool operator==(const Integer& n) const { return value == n.value; }
 
     /// Comparison
-    inline bool operator!=(const Integer &n) const { return value != n.value; }
+    inline bool operator!=(const Integer& n) const { return value != n.value; }
 
     /// Comparison
-    inline bool operator<(const Integer &n) const { return value < n.value; }
+    inline bool operator<(const Integer& n) const { return value < n.value; }
 
     /// Comparison
-    inline bool operator<=(const Integer &n) const { return value <= n.value; }
+    inline bool operator<=(const Integer& n) const { return value <= n.value; }
 
     /// Comparison
-    inline bool operator>(const Integer &n) const { return value > n.value; }
+    inline bool operator>(const Integer& n) const { return value > n.value; }
 
     /// Comparison
-    inline bool operator>=(const Integer &n) const { return value >= n.value; }
+    inline bool operator>=(const Integer& n) const { return value >= n.value; }
 
     /// Add
-    inline Integer operator+(const Integer &n) const {
+    inline Integer operator+(const Integer& n) const {
         Integer r;
         r.value = value + n.value;
         return r;
     }
 
     /// Add
-    inline Integer &operator+=(const Integer &n) {
+    inline Integer& operator+=(const Integer& n) {
         value += n.value;
         return *this;
     }
 
     /// Sub
-    inline Integer operator-(const Integer &n) const {
+    inline Integer operator-(const Integer& n) const {
         Integer r;
         r.value = value - n.value;
         return r;
     }
 
     /// Mul
-    inline Integer operator*(const Integer &n) const {
+    inline Integer operator*(const Integer& n) const {
         Integer r;
         r.value = value * n.value;
         return r;
     }
 
     /// Cast
-    static Integer castString(const char *str, uint32_t strLen);
+    static Integer castString(const char* str, uint32_t strLen);
 };
 
 //---------------------------------------------------------------------------
@@ -101,7 +101,7 @@ inline Integer modulo(Integer x, int32_t y) {
 }
 
 //---------------------------------------------------------------------------
-std::ostream &operator<<(std::ostream &out, const Integer &value);
+std::ostream& operator<<(std::ostream& out, const Integer& value);
 
 //---------------------------------------------------------------------------
 /// A variable length string
@@ -121,28 +121,28 @@ public:
     inline uint64_t hash() const;
 
     /// The first character
-    char *begin() { return value; }
+    char* begin() { return value; }
 
     /// Behind the last character
-    char *end() { return value + length(); }
+    char* end() { return value + length(); }
 
     /// The first character
-    const char *begin() const { return value; }
+    const char* begin() const { return value; }
 
     /// Behind the last character
-    const char *end() const { return value + length(); }
+    const char* end() const { return value + length(); }
 
     /// Comparison
-    bool operator==(const char *other) const { return strncmp(value, other, len) == 0; }
+    bool operator==(const char* other) const { return strncmp(value, other, len) == 0; }
 
     /// Comparison
-    bool operator==(const Varchar &other) const { return (len == other.len) && (memcmp(value, other.value, len) == 0); }
+    bool operator==(const Varchar& other) const { return (len == other.len) && (memcmp(value, other.value, len) == 0); }
 
     /// Comparison
-    bool operator<(const Varchar &other) const;
+    bool operator<(const Varchar& other) const;
 
     /// Build
-    static Varchar build(const char *value) {
+    static Varchar build(const char* value) {
         Varchar result;
         strncpy(result.value, value, maxLen);
         result.len = strnlen(value, maxLen);
@@ -150,7 +150,7 @@ public:
     }
 
     ///Cast
-    static Varchar<maxLen> castString(const char *str, uint32_t strLen) {
+    static Varchar<maxLen> castString(const char* str, uint32_t strLen) {
         assert(strLen <= maxLen);
         Varchar<maxLen> result;
         result.len = strLen;
@@ -173,7 +173,7 @@ uint64_t Varchar<maxLen>::hash() const
 
 //---------------------------------------------------------------------------
 template<unsigned maxLen>
-bool Varchar<maxLen>::operator<(const Varchar &other) const
+bool Varchar<maxLen>::operator<(const Varchar& other) const
 // Comparison
 {
     int c = memcmp(value, other.value, min(len, other.len));
@@ -184,7 +184,7 @@ bool Varchar<maxLen>::operator<(const Varchar &other) const
 
 //---------------------------------------------------------------------------
 template<unsigned maxLen>
-std::ostream &operator<<(std::ostream &out, const Varchar<maxLen> &value)
+std::ostream& operator<<(std::ostream& out, const Varchar<maxLen>& value)
 // Output
 {
     for (auto iter = value.begin(), limit = value.end(); iter != limit; ++iter) {
@@ -210,34 +210,34 @@ public:
     inline uint64_t hash() const;
 
     /// The first character
-    char *begin() { return value; }
+    char* begin() { return value; }
 
     /// Behind the last character
-    char *end() { return value + length(); }
+    char* end() { return value + length(); }
 
     /// The first character
-    const char *begin() const { return value; }
+    const char* begin() const { return value; }
 
     /// Behind the last character
-    const char *end() const { return value + length(); }
+    const char* end() const { return value + length(); }
 
     /// Comparison
-    bool operator==(const char *other) const { return (other[0] == value[0]) && (len == strlen(other)) && (strncmp(value, other, len) == 0); }
+    bool operator==(const char* other) const { return (other[0] == value[0]) && (len == strlen(other)) && (strncmp(value, other, len) == 0); }
 
     /// Comparison
-    bool operator!=(const char *other) const { return (len != strlen(other)) || (strncmp(value, other, len) != 0); }
+    bool operator!=(const char* other) const { return (len != strlen(other)) || (strncmp(value, other, len) != 0); }
 
     /// Comparison
-    bool operator==(const Char &other) const { return (len == other.len) && (memcmp(value, other.value, len) == 0); }
+    bool operator==(const Char& other) const { return (len == other.len) && (memcmp(value, other.value, len) == 0); }
 
     /// Comparison
-    bool operator<(const Char &other) const;
+    bool operator<(const Char& other) const;
 
     /// Comparison
-    bool operator>(const Char &other) const;
+    bool operator>(const Char& other) const;
 
     /// Build
-    static Char build(const char *value) {
+    static Char build(const char* value) {
         Char result;
         memcpy(result.value, value, maxLen);
         result.len = strnlen(result.value, maxLen);
@@ -245,7 +245,7 @@ public:
     }
 
     /// Cast
-    static Char<maxLen> castString(const char *str, uint32_t strLen) {
+    static Char<maxLen> castString(const char* str, uint32_t strLen) {
         while ((*str) == ' ') {
             str++;
             strLen--;
@@ -272,7 +272,7 @@ uint64_t Char<maxLen>::hash() const
 
 //---------------------------------------------------------------------------
 template<unsigned maxLen>
-bool Char<maxLen>::operator<(const Char &other) const
+bool Char<maxLen>::operator<(const Char& other) const
 // Comparison
 {
     int c = memcmp(value, other.value, min(len, other.len));
@@ -283,7 +283,7 @@ bool Char<maxLen>::operator<(const Char &other) const
 
 //---------------------------------------------------------------------------
 template<unsigned maxLen>
-bool Char<maxLen>::operator>(const Char &other) const
+bool Char<maxLen>::operator>(const Char& other) const
 // Comparison
 {
     int c = memcmp(value, other.value, min(len, other.len));
@@ -308,34 +308,34 @@ public:
     unsigned length() const { return value != ' '; }
 
     /// The first character
-    char *begin() { return &value; }
+    char* begin() { return &value; }
 
     /// Behind the last character
-    char *end() { return &value + length(); }
+    char* end() { return &value + length(); }
 
     /// The first character
-    const char *begin() const { return &value; }
+    const char* begin() const { return &value; }
 
     /// Behind the last character
-    const char *end() const { return &value + length(); }
+    const char* end() const { return &value + length(); }
 
     /// Comparison
-    bool operator==(const char *other) const { return (value == other[0]) && (strlen(other) == 1); }
+    bool operator==(const char* other) const { return (value == other[0]) && (strlen(other) == 1); }
 
     /// Comparison
-    bool operator==(const Char &other) const { return value == other.value; }
+    bool operator==(const Char& other) const { return value == other.value; }
 
     /// Comparison
-    bool operator<(const Char &other) const { return value < other.value; }
+    bool operator<(const Char& other) const { return value < other.value; }
 
     /// Build
-    static Char build(const char *value) {
+    static Char build(const char* value) {
         Char result;
         result.value = *value;
         return result;
     }
 
-    static Char<1> castString(const char *str, uint32_t strLen) {
+    static Char<1> castString(const char* str, uint32_t strLen) {
         Char<1> x;
         x.value = str[0];
         return x;
@@ -352,7 +352,7 @@ uint64_t Char<1>::hash() const {
 
 //---------------------------------------------------------------------------
 template<unsigned maxLen>
-std::ostream &operator<<(std::ostream &out, const Char<maxLen> &value)
+std::ostream& operator<<(std::ostream& out, const Char<maxLen>& value)
 // Output
 {
     for (auto iter = value.begin(), limit = value.end(); iter != limit; ++iter) {
@@ -375,11 +375,11 @@ public:
     template<unsigned l, unsigned p> friend
     class Numeric;
 
-    Numeric() : value(0) {}
+    Numeric() : value(0) { }
 
-    Numeric(Integer x) : value(x.value * numericShifts[precision]) {}
+    Numeric(Integer x) : value(x.value * numericShifts[precision]) { }
 
-    Numeric(int64_t x) : value(x) {}
+    Numeric(int64_t x) : value(x) { }
 
     /// Assign a value
     void assignRaw(long v) { value = v; }
@@ -391,45 +391,45 @@ public:
     inline uint64_t hash() const;
 
     /// Comparison
-    bool operator==(const Numeric<len, precision> &n) const { return value == n.value; }
+    bool operator==(const Numeric<len, precision>& n) const { return value == n.value; }
 
     /// Comparison
-    bool operator!=(const Numeric<len, precision> &n) const { return value != n.value; }
+    bool operator!=(const Numeric<len, precision>& n) const { return value != n.value; }
 
     /// Comparison
-    bool operator<(const Numeric<len, precision> &n) const { return value < n.value; }
+    bool operator<(const Numeric<len, precision>& n) const { return value < n.value; }
 
     /// Comparison
-    bool operator<=(const Numeric<len, precision> &n) const { return value <= n.value; }
+    bool operator<=(const Numeric<len, precision>& n) const { return value <= n.value; }
 
     /// Comparison
-    bool operator>(const Numeric<len, precision> &n) const { return value > n.value; }
+    bool operator>(const Numeric<len, precision>& n) const { return value > n.value; }
 
     /// Comparison
-    bool operator>=(const Numeric<len, precision> &n) const { return value >= n.value; }
+    bool operator>=(const Numeric<len, precision>& n) const { return value >= n.value; }
 
     /// Add
-    Numeric operator+(const Numeric<len, precision> &n) const {
+    Numeric operator+(const Numeric<len, precision>& n) const {
         Numeric r;
         r.value = value + n.value;
         return r;
     }
 
     /// Add
-    Numeric &operator+=(const Numeric<len, precision> &n) {
+    Numeric& operator+=(const Numeric<len, precision>& n) {
         value += n.value;
         return *this;
     }
 
     /// Sub
-    Numeric operator-(const Numeric<len, precision> &n) const {
+    Numeric operator-(const Numeric<len, precision>& n) const {
         Numeric r;
         r.value = value - n.value;
         return r;
     }
 
     /// Div
-    Numeric<len, precision> operator/(const Integer &n) const {
+    Numeric<len, precision> operator/(const Integer& n) const {
         Numeric r;
         r.value = value / n.value;
         return r;
@@ -437,7 +437,7 @@ public:
 
     /// Div
     template<unsigned l>
-    Numeric<len, precision> operator/(const Numeric<l, 0> &n) const {
+    Numeric<len, precision> operator/(const Numeric<l, 0>& n) const {
         Numeric r;
         r.value = value / n.value;
         return r;
@@ -445,7 +445,7 @@ public:
 
     /// Div
     template<unsigned l>
-    Numeric<len, precision> operator/(const Numeric<l, 1> &n) const {
+    Numeric<len, precision> operator/(const Numeric<l, 1>& n) const {
         Numeric r;
         r.value = value * 10 / n.value;
         return r;
@@ -453,7 +453,7 @@ public:
 
     /// Div
     template<unsigned l>
-    Numeric<len, precision> operator/(const Numeric<l, 2> &n) const {
+    Numeric<len, precision> operator/(const Numeric<l, 2>& n) const {
         Numeric r;
         r.value = value * 100 / n.value;
         return r;
@@ -461,14 +461,14 @@ public:
 
     /// Div
     template<unsigned l>
-    Numeric<len, precision> operator/(const Numeric<l, 4> &n) const {
+    Numeric<len, precision> operator/(const Numeric<l, 4>& n) const {
         Numeric r;
         r.value = value * 10000 / n.value;
         return r;
     }
 
     /// Mul
-    Numeric<len, precision + precision> operator*(const Numeric<len, precision> &n) const {
+    Numeric<len, precision + precision> operator*(const Numeric<len, precision>& n) const {
         Numeric<len, precision + precision> r;
         r.value = value * n.value;
         return r;
@@ -528,7 +528,7 @@ public:
     }
 
     /// Cast
-    static Numeric<len, precision> castString(const char *str, uint32_t strLen) {
+    static Numeric<len, precision> castString(const char* str, uint32_t strLen) {
         auto iter = str, limit = str + strLen;
 
         // Trim WS
@@ -602,7 +602,7 @@ uint64_t Numeric<len, precision>::hash() const
 
 //---------------------------------------------------------------------------
 template<unsigned len, unsigned precision>
-std::ostream &operator<<(std::ostream &out, const Numeric<len, precision> &value)
+std::ostream& operator<<(std::ostream& out, const Numeric<len, precision>& value)
 // Dump the value
 {
     long v = value.getRaw();
@@ -641,41 +641,41 @@ class Date {
 public:
     int32_t value;
 
-    Date() {}
+    Date() { }
 
-    Date(int32_t value) : value(value) {}
+    Date(int32_t value) : value(value) { }
 
     /// Hash
     inline uint64_t hash() const;
 
     /// Comparison
-    inline bool operator==(const Date &n) const { return value == n.value; }
+    inline bool operator==(const Date& n) const { return value == n.value; }
 
     /// Comparison
-    inline bool operator!=(const Date &n) const { return value != n.value; }
+    inline bool operator!=(const Date& n) const { return value != n.value; }
 
     /// Comparison
-    inline bool operator<(const Date &n) const { return value < n.value; }
+    inline bool operator<(const Date& n) const { return value < n.value; }
 
     /// Comparison
-    inline bool operator<=(const Date &n) const { return value <= n.value; }
+    inline bool operator<=(const Date& n) const { return value <= n.value; }
 
     /// Comparison
-    inline bool operator>(const Date &n) const { return value > n.value; }
+    inline bool operator>(const Date& n) const { return value > n.value; }
 
     /// Comparison
-    inline bool operator>=(const Date &n) const { return value >= n.value; }
+    inline bool operator>=(const Date& n) const { return value >= n.value; }
 
     /// Cast
-    static Date castString(const char *str, uint32_t strLen);
+    static Date castString(const char* str, uint32_t strLen);
 };
 
 //---------------------------------------------------------------------------
 /// Extract year
-Integer extractYear(const Date &d);
+Integer extractYear(const Date& d);
 
 //---------------------------------------------------------------------------
-std::ostream &operator<<(std::ostream &out, const Date &value);
+std::ostream& operator<<(std::ostream& out, const Date& value);
 
 //---------------------------------------------------------------------------
 /// A timestamp
@@ -684,9 +684,9 @@ public:
     /// The value
     uint64_t value;
 
-    Timestamp() {}
+    Timestamp() { }
 
-    Timestamp(uint64_t value) : value(value) {}
+    Timestamp(uint64_t value) : value(value) { }
 
     /// NULL
     static Timestamp null();
@@ -698,23 +698,23 @@ public:
     inline uint64_t hash() const;
 
     /// Comparison
-    bool operator==(const Timestamp &t) const { return value == t.value; }
+    bool operator==(const Timestamp& t) const { return value == t.value; }
 
     /// Comparison
-    bool operator!=(const Timestamp &t) const { return value != t.value; }
+    bool operator!=(const Timestamp& t) const { return value != t.value; }
 
     /// Comparison
-    bool operator<(const Timestamp &t) const { return value < t.value; }
+    bool operator<(const Timestamp& t) const { return value < t.value; }
 
     /// Comparison
-    bool operator>(const Timestamp &t) const { return value > t.value; }
+    bool operator>(const Timestamp& t) const { return value > t.value; }
 
     /// Cast
-    static Timestamp castString(const char *str, uint32_t strLen);
+    static Timestamp castString(const char* str, uint32_t strLen);
 };
 
 //---------------------------------------------------------------------------
-std::ostream &operator<<(std::ostream &out, const Timestamp &value);
+std::ostream& operator<<(std::ostream& out, const Timestamp& value);
 
 //---------------------------------------------------------------------------
 uint64_t Integer::hash() const
