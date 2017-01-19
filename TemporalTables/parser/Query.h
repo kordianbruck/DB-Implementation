@@ -25,6 +25,7 @@ class Query {
     friend class QueryParser;
 
     vector<string> projection;
+    bool projectAll = false;
     vector<string> relation;
     vector<conditionType> selection;
     vector<conditionType> joinConditions;

@@ -106,31 +106,40 @@ string Query::generateQueryCode() {
 
     //All the vars we want to output need to be passed to the printer
     auto projections = vector<IU*>();
-    projections.reserve(projection.size());
-    for (auto& p : projection) {
-        bool found = false;
-        for (auto iu : ops.top()->getProduced()) {
-            if (iu->attr->name == p) {
-                projections.emplace_back(iu);
-                found = true;
+    if (projectAll) { // Show all columns
+        for (auto& iu : ops.top()->getProduced()) {
+            projections.emplace_back(iu);
+        }
+    } else { // Only show a few columns
+        projections.reserve(projection.size());
+        bool found;
+        for (auto& p : projection) {
+            found = false;
+            for (auto& iu : ops.top()->getProduced()) {
+                if (iu->attr->name == p || projectAll) {
+                    projections.emplace_back(iu);
+                    found = true;
+                }
+            }
+
+            //Check that we actually have this predicate available for output and fail if not
+            if (!found) {
+                throw ParserError(0, "The predicate " + p + " was not found to be output.");
             }
         }
-
-        //Check that we actually have this predicate available for output and fail if not
-        if (!found) {
-            throw ParserError(0, "The predicate " + p + " was not found to be output.");
-        }
     }
+
 
     //Create a printer that will output our projections
     Print result = Print(*ops.top(), projections);
     string ret = result.produce();
 
-
+    //Free memory
     while (ops.size() > 0) {
         auto e = ops.top();
         delete e;
         ops.pop();
     }
+
     return ret;
 }

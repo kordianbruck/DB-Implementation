@@ -14,6 +14,7 @@ namespace literal {
     const char Comma = ',';
     const char Semicolon = ';';
     const char Equals = '=';
+    const char Star = '*';
 }
 
 unique_ptr<Query> QueryParser::parse(const string& query, Schema* schema) {
@@ -87,6 +88,9 @@ void QueryParser::nextToken(const string& token, Query& query) {
         case State::SelectItem:
             if (isIdentifier(tok)) {
                 query.projection.push_back(tok);
+                state = State::SelectEnd;
+            } else if (tok.size() == 1 && tok[0] == literal::Star) {
+                query.projectAll = true;
                 state = State::SelectEnd;
             } else {
                 throw ParserError(0, "Expected 'SELECT' identifier predicate, found '" + token + "'");
