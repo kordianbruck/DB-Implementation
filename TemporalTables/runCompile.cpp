@@ -14,7 +14,7 @@ struct Database;
 
 int compileFile(string name, string outname) {
     ifstream f("tmp/" + outname);
-    if (f.good()) { // Only compile if not already on disk
+    if (f.good() && outname != "db.so") { // Only compile if not already on disk
         return 0;
     }
     //Debug symbols: -g / Additional: -flto  -pipe
@@ -68,15 +68,14 @@ void loadAndRunQuery(string filename, Database* db) {
 }
 
 Schema* parseAndWriteSchema(const string& schemaFile) {
-    Schema* schema;
+    Schema* schema = nullptr;
     SchemaParser p(schemaFile);
     try {
         schema = p.parse();
         cout << "Loaded " << schema->relations.size() << " relations into our schema." << endl;
-        //cout << schema->toString() << endl;
 
         //Write to file the database
-        cout << "Generating database code..." << endl;
+        //cout << "Generating database code..." << endl;
         ofstream myfile;
         myfile.open("tmp/db.cpp");
         myfile << schema->generateDatabaseCode();
@@ -84,12 +83,12 @@ Schema* parseAndWriteSchema(const string& schemaFile) {
 
         //cout << "Compiling." << endl << endl;
         compileFile("db.cpp", "db.so");
-        cout << "Schema ready for loading." << endl << endl;
+        //cout << "Schema ready for loading." << endl << endl;
     } catch (ParserError& e) {
         cerr << e.what() << " on line " << e.where() << endl;
     } catch (char const* msg) {
         cerr << "Error: " << msg << endl;
-        schema = nullptr;
+        schema = nullptr; //Reset pointer so that further execution stops
     }
 
     return schema;
@@ -115,8 +114,11 @@ string parseAndWriteQuery(const string& query, Schema* s) {
            << "#include \"../Types.hpp\"" << endl
            << "#include <algorithm>" << endl;
     myfile << "using namespace std;" << endl;
-    myfile << "/* " << qu.get()->toString() << " */ " << endl;
-    myfile << "extern \"C\" void query(Database* db) {" << qu.get()->generateQueryCode() << "}";
+    myfile << "/* ";
+    myfile << qu.get()->toString();
+    myfile << " */ " << endl;
+    myfile << "extern \"C\" void query(Database* db) {";
+    myfile << qu.get()->generateQueryCode() << "}";
     myfile.close();
 
     return filename;
@@ -130,7 +132,7 @@ int main(int argc, char** argv) {
     cout << "TPC-C Compile" << endl;
     cout << "--------------------------" << endl;
 
-    //Load our schema, parse it and get it localally so we can parse queries on that schmea
+    //Load our schema, parse it and get it locally so we can parse queries on that schmea
     Schema* schema = parseAndWriteSchema(argv[1]);
     if (schema == nullptr) {
         return 1;
@@ -147,17 +149,18 @@ int main(int argc, char** argv) {
         cout << "aborting due to schema failed to load" << endl;
         return 1;
     }
-    cout << "DB should be ready." << endl << endl;
 
-    cout << "Enter a sql query or 'exit' to quit: " << endl;
-    cout << ">";
+    cout << "Enter a sql query, 'show schema' or 'exit' to quit: " << endl;
 
     string line;
-    while (getline(cin, line)) {
+    do {
         if (line == "exit") {
             break;
         }
-        if (line != "") {
+
+        if (line == "show schema") {
+            cout << schema->toString() << endl;
+        } else if (line != "") {
             try {
                 string file = parseAndWriteQuery(line, schema);
                 if (compileFile(file + ".cpp", file + ".so") == 0) {
@@ -171,13 +174,13 @@ int main(int argc, char** argv) {
             }
         }
 
-        //Add a new placeholder for a new command
         cout << ">";
-    }
+    } while (getline(cin, line));
 
     //parseAndWriteQuery("select w_id from warehouse;", schema);
     //parseAndWriteQuery("select c_id, c_first, c_middle, c_last from customer where c_last = 'BARBARBAR';", schema);
 
+    //Turn off warnings caused by generated Database code, that is not available at compile time
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdelete-incomplete"
     delete schema;

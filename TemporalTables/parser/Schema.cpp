@@ -8,13 +8,10 @@ using namespace std;
 string Schema::type(const Schema::Relation::Attribute& attr, bool cpp) {
     Types::Tag type = attr.type;
     switch (type) {
-        case Types::Tag::Integer:
-            return "Integer";
+        case Types::Tag::Integer:return "Integer";
         case Types::Tag::Datetime:
-        case Types::Tag::Date:
-            return "Date";
-        case Types::Tag::Timestamp:
-            return "Timestamp";
+        case Types::Tag::Date:return "Date";
+        case Types::Tag::Timestamp:return "Timestamp";
         case Types::Tag::Numeric: {
             stringstream ss;
             if (!cpp) {
@@ -64,26 +61,43 @@ static string pkListType(const Schema::Relation& rel) {
 string Schema::toString() const {
     stringstream out;
     for (const Schema::Relation& rel : relations) {
-        out << rel.name << endl;
-        out << "\tPrimary Key:";
-        for (unsigned keyId : rel.primaryKey) {
-            out << ' ' << rel.attributes[keyId].name;
+        out << rel.name;
+        if (rel.systemVersioning) {
+            out << "(SysVerioned on Period: ";
+            out << rel.attributes[rel.systemVersioningPeriod.first].name;
+            if (rel.attributes[rel.systemVersioningPeriod.first].generatedStart) {
+                out << " START";
+            } else {
+                out << " END";
+            }
+
+            out << ", ";
+            out << rel.attributes[rel.systemVersioningPeriod.second].name;
+            if (rel.attributes[rel.systemVersioningPeriod.second].generatedStart) {
+                out << " START";
+            } else {
+                out << " END";
+            }
+            out << ")";
         }
         out << endl;
-        cout << out.str();
+        out << "\tPrimary:";
+        for (unsigned keyId : rel.primaryKey) {
+            out << rel.attributes[keyId].name << ' ';
+        }
+        out << endl;
         out << "\tColumns: " << endl;
         for (const auto& attr : rel.attributes) {
-            out << "\t\t" << attr.name << '\t' << type(attr) << (attr.notNull ? " not null" : "") << endl;
+            out << "\t\t";
+            out << attr.name << '\t' << type(attr) << (attr.notNull ? " not null" : "") << endl;
         }
-        cout << out.str();
     }
     return out.str();
 }
 
 string Schema::generateDatabaseCode() const {
     stringstream out;
-    out << "#pragma once" << endl
-        << "#include <iostream>" << endl
+    out << "#include <iostream>" << endl
         << "#include <cstdint>" << endl
         << "#include <fstream>" << endl
         << "#include <vector>" << endl
@@ -94,6 +108,7 @@ string Schema::generateDatabaseCode() const {
         << "#include <map>" << endl
         << "#include <sstream>" << endl
         << "#include \"../Types.hpp\"" << endl
+        << "#include \"../DatabaseTools.h\"" << endl
         << "#include \"../tupel_hash.h\"" << endl;
 
     out << "struct Database {" << endl;
@@ -195,34 +210,6 @@ string Schema::generateDatabaseCode() const {
         out << "    };" << endl;
     }
 
-    //The split function for parsing the table data
-    out << "    void split(const std::string& str, std::vector<std::string>& lineChunks) {\n"
-            "        std::stringstream in(str);\n"
-            "        std::string segment;\n"
-            "        lineChunks.clear();\n"
-            "        while (std::getline(in, segment, '|')) {\n"
-            "           lineChunks.push_back(segment);\n"
-            "        }\n"
-            "    }" << endl;
-
-    //Template for loading each table into ram
-    out << "    template<typename T>\n"
-            "    void loadTableFromFile(T& tbl, const std::string& file) {\n"
-            "        std::ifstream myfile(file);\n"
-            "        if (!myfile.is_open()) {\n"
-            "            return;\n"
-            "        }\n"
-            "\n"
-            "        std::string line;\n"
-            "        std::vector<std::string> lineChunks;\n"
-            "        while (getline(myfile, line)) {\n"
-            "            split(line, lineChunks);\n"
-            "            auto tmp = T::parse(lineChunks);\n"
-            "            tbl.table.push_back(tmp);\n"
-            "        }\n"
-            "        myfile.close();\n"
-            "    }" << endl;
-
     out << "public: " << endl;
     out << "    Database(const Database&) = delete;\n"
             "    Database () {}" << endl;
@@ -233,7 +220,7 @@ string Schema::generateDatabaseCode() const {
     //Import: import any data into our database
     out << "    void import(const std::string &path) {" << endl;
     for (const Schema::Relation& rel : relations) {
-        out << "       loadTableFromFile(" << rel.name << ", path + \"tpcc_" << rel.name << ".tbl\");\n" << endl;
+        out << "       DatabaseTools::loadTableFromFile(" << rel.name << ", path + \"tpcc_" << rel.name << ".tbl\");\n" << endl;
         out << "       std::cout << \"\\t" << rel.name << ": \" << " << rel.name << ".size() << std::endl;" << endl;
     }
     out << "    }" << endl; // End import()
