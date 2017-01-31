@@ -1,7 +1,7 @@
 #ifndef TABLE_TYPES_H
 #define TABLE_TYPES_H
 
-#include "tupel_hash.h"
+#include "TupelHash.h"
 #include "Types.hpp"
 
 class Warehouse {

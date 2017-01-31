@@ -107,9 +107,9 @@ string Schema::generateDatabaseCode() const {
         << "#include <tuple>" << endl
         << "#include <map>" << endl
         << "#include <sstream>" << endl
-        << "#include \"../Types.hpp\"" << endl
-        << "#include \"../DatabaseTools.h\"" << endl
-        << "#include \"../tupel_hash.h\"" << endl;
+        << "#include \"../utils/Types.hpp\"" << endl
+        << "#include \"../utils/DatabaseTools.h\"" << endl
+        << "#include \"../utils/TpchTypes.hpp\"" << endl;
 
     out << "struct Database {" << endl;
     out << "private: " << endl;
