@@ -147,7 +147,6 @@ string Schema::generateDatabaseCode() const {
         out << "        std::vector<Row> table{};" << endl;
         if (hasPK) {
             out << "        std::unordered_map<pkType, u_int32_t> pk{};" << endl;
-            out << "        std::map<pkType, u_int32_t> pkTree{};" << endl;
         }
         if (rel.indexes.size() > 0) {
             for (auto e : rel.indexes) {
@@ -170,12 +169,8 @@ string Schema::generateDatabaseCode() const {
         //Removing elements
         out << "        void remove(size_t i) {" << endl;
         if (hasPK) {
-            //out << "            const auto key = row(i).key();" << endl;
-            //out << "            pk.erase(key);" << endl;
-            //out << "            pkTree.erase(key);" << endl;
             out << "            const auto key = row(i).key();" << endl;
             out << "            pk.erase(key);" << endl;
-            out << "            pkTree.erase(key);" << endl;
 
         }
         //out << "            table[i] = row(table.size()-1);" << endl;
@@ -183,7 +178,6 @@ string Schema::generateDatabaseCode() const {
         out << "            table.pop_back();" << endl;
         if (hasPK) {
             out << "            pk[table[i].key()] = i;" << endl;
-            out << "            pkTree[table[i].key()] = i;" << endl;
         }
         out << "        }" << endl;
 
@@ -192,7 +186,6 @@ string Schema::generateDatabaseCode() const {
         out << "            table.push_back(element); " << endl;
         if (hasPK) {
             out << "            pk[element.key()] = table.size() - 1;" << endl;
-            out << "            pkTree[element.key()] = table.size() - 1;" << endl;
         }
         out << "        }" << endl;
         if (hasPK) {
@@ -201,7 +194,6 @@ string Schema::generateDatabaseCode() const {
             out << "            pk.reserve(size);" << endl;
             out << "            for (size_t i = 0; i < size; i++) {" << endl;
             out << "                pk[table[i].key()] = i;" << endl;
-            out << "                pkTree[table[i].key()] = i;" << endl;
             out << "            }" << endl;
             out << "        }" << endl;
         }
