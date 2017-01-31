@@ -110,6 +110,7 @@ string Schema::generateDatabaseCode() const {
         << "#include \"../utils/Types.hpp\"" << endl
         << "#include \"../utils/DatabaseTools.h\"" << endl
         << "#include \"../utils/TupelHash.h\"" << endl;
+    out << "#include \"btree_set.h\"" << endl;
 
     out << "struct Database {" << endl;
     out << "private: " << endl;

@@ -9,6 +9,8 @@ add_executable(runCompile RunCompile.cpp utils/Types.cpp utils/DatabaseTools.cpp
         operators/Selection.h operators/HashJoin.cpp operators/HashJoin.h operators/Print.cpp
         operators/Print.h operators/Operator.cpp operators/Operator.h )
 
+add_executable(runBtree BtreeTest.cpp)
+
 TARGET_LINK_LIBRARIES(runCompile ${Boost_LIBRARIES})
 
 SET(CMAKE_CXX_FLAGS "-std=c++1y")

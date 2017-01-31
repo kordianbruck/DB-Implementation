@@ -20,6 +20,7 @@
 #include "../parser/SchemaParser.hpp"
 #include "../parser/QueryParser.hpp"
 #include "md5.h"
+#include <boost/format.hpp>
 
 using namespace std;
 struct Database;
@@ -27,7 +28,10 @@ struct Database;
 struct DatabaseTools {
 
     static const string dbName;
+    static const string dbNameCompiled;
     static const string folderTmp;
+    static const string folderTable;
+    static const string cmdBuild;
 
     static void split(const std::string& str, std::vector<std::string>& lineChunks);
 

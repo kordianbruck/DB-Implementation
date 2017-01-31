@@ -3,7 +3,12 @@
 
 
 const string DatabaseTools::dbName = "db.cpp";
+const string DatabaseTools::dbNameCompiled = "db.cpp";
 const string DatabaseTools::folderTmp = "tmp/";
+const string DatabaseTools::folderTable = "../tbl/";
+//Debug symbols: -g / Additional: -flto  -pipe
+const string DatabaseTools::cmdBuild = "g++ -O3 -std=c++14 -fPIC -flto  -pipe %1% -shared -o %2%";
+
 
 void DatabaseTools::split(const std::string& str, std::vector<std::string>& lineChunks) {
     std::stringstream in(str);
@@ -16,12 +21,13 @@ void DatabaseTools::split(const std::string& str, std::vector<std::string>& line
 
 int DatabaseTools::compileFile(string name, string outname) {
     ifstream f(folderTmp + outname);
-    if (f.good() && outname != "db.so") { // Only compile if not already on disk
+    if (f.good() && outname != dbNameCompiled) { // Only compile if not already on disk
         return 0;
     }
-    //Debug symbols: -g / Additional: -flto  -pipe
-    int status = system(("g++ -O3 -std=c++14 -fPIC -flto  -pipe " + folderTmp + name + " -shared -o " + folderTmp + outname).c_str());
-    return status;
+
+    boost::format command(cmdBuild);
+    command % (folderTmp + name) % (folderTmp + outname);
+    return system(command.str().c_str());
 }
 
 Database* DatabaseTools::loadAndRunDb(string filename) {
@@ -36,7 +42,7 @@ Database* DatabaseTools::loadAndRunDb(string filename) {
         cerr << "error: " << dlerror() << endl;
         return nullptr;
     }
-    Database* db = make_database("../tbl/");
+    Database* db = make_database(folderTable);
 
     if (dlclose(handle)) {
         cerr << "error: " << dlerror() << endl;
@@ -80,7 +86,7 @@ Schema* DatabaseTools::parseAndWriteSchema(const string& schemaFile) {
         myfile << schema->generateDatabaseCode();
         myfile.close();
 
-        compileFile(dbName, "db.so");
+        compileFile(dbName, dbNameCompiled);
     } catch (ParserError& e) {
         cerr << e.what() << " on line " << e.where() << endl;
     } catch (char const* msg) {
