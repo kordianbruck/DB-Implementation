@@ -108,7 +108,7 @@ string Query::generateQueryCode() {
     auto projections = vector<IU*>();
     if (projectAll) { // Show all columns
         for (auto& iu : ops.top()->getProduced()) {
-            projections.emplace_back(iu);
+            projections.push_back(iu);
         }
     } else { // Only show a few columns
         projections.reserve(projection.size());

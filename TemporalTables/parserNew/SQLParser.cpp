@@ -11,8 +11,16 @@ SQLParser::SQLParser(SQLLexer& lexer) : lexer(lexer) {
 SQLParser::~SQLParser() {
 }
 
-void SQLParser::parseSelect() {
+void SQLParser::parseSelect(Query& query) {
     SQLLexer::Token token = lexer.getNext();
+
+    //Catch if the user wants the code to be shown instead of executed
+    if (token == SQLLexer::Identifier && lexer.isKeyword("explain")) {
+        query.explain = true;
+        token = lexer.getNext(); //Skip this identifier
+    }
+
+    //After that we should have a select - if not catch this here
     if (token != SQLLexer::Identifier || !lexer.isKeyword("select")) {
         throw ParserException("Query should start with SELECT");
     }
@@ -29,11 +37,9 @@ void SQLParser::parseSelect() {
                 }
                 break;
             }
-            lexer.unget(token);
-            RelationAttribute attr = parseAttributeName();
-            result.projections.push_back(attr);
+            query.projection.push_back(lexer.getTokenValue());
         } else if (token == SQLLexer::Star) {
-            // we do nothing here
+            query.projectAll = true;
         } else if (token == SQLLexer::Comma) {
             if (emptySelect) {
                 throw ParserException("Syntax error: Comma after empty expression");
@@ -49,7 +55,7 @@ void SQLParser::parseSelect() {
     }
 }
 
-void SQLParser::parseFrom() {
+void SQLParser::parseFrom(Query& query) {
     SQLLexer::Token token = lexer.getNext();
     if (token != SQLLexer::Identifier || !lexer.isKeyword("from")) {
         throw ParserException("Missing FROM clause");
@@ -63,9 +69,7 @@ void SQLParser::parseFrom() {
             break;
         }
         if (token == SQLLexer::Identifier) {
-            lexer.unget(token);
-            Relation rel = parseRelation();
-            result.relations.push_back(rel);
+            query.relation.push_back(lexer.getTokenValue());
             isRelationParsed = true;
         } else if (token == SQLLexer::Comma) {
             if (!isRelationParsed) {
@@ -73,7 +77,7 @@ void SQLParser::parseFrom() {
             }
             isRelationParsed = false;
         } else if (token == SQLLexer::Eof) {
-            if (result.relations.size() > 0) {
+            if (query.relation.size() > 0) {
                 break;
             }
             throw ParserException("Missing relation in FROM clause");
@@ -83,38 +87,8 @@ void SQLParser::parseFrom() {
     }
 }
 
-SQLParser::Relation SQLParser::parseRelation() {
-    SQLLexer::Token token = lexer.getNext();
-    if (token != SQLLexer::Identifier) {
-        throw ParserException("Expected a name of a relation");
-    }
-    string name = lexer.getTokenValue();
-    Relation rel;
-    rel.name = name;
-    token = lexer.getNext();
-    if (token != SQLLexer::Identifier || lexer.isKeyword("where")) {
-        lexer.unget(token);
-        rel.isFullyQualified = false;
-    } else {
-        rel.binding = lexer.getTokenValue();
-        rel.isFullyQualified = true;
-    }
-    return std::move(rel);
-}
-
-SQLParser::RelationAttribute SQLParser::parseAttributeName() {
-    SQLLexer::Token token = lexer.getNext();
-    if (token != SQLLexer::Identifier) {
-        throw ParserException("Expected attribute name");
-    }
-
-    string name = lexer.getTokenValue();
-    RelationAttribute attr{name};
-    return std::move(attr);
-}
-
 /// Warning: only handles expressions of a form attr1=attr2, or attr = constant
-void SQLParser::parseWhere() {
+void SQLParser::parseWhere(Query& query) {
     SQLLexer::Token token = lexer.getNext();
 
     if (token == SQLLexer::Eof) {
@@ -128,8 +102,8 @@ void SQLParser::parseWhere() {
     bool isLeftSideReady = false;
     bool isExpressionReady = false;
     bool isJoin = false;
-    RelationAttribute attrLeft, attrRight;
-    Constant c;
+    string attrLeft, attrRight;
+    string constant;
 
     while (true) {
         token = lexer.getNext();
@@ -140,13 +114,12 @@ void SQLParser::parseWhere() {
             isExpressionReady = false;
             isLeftSideReady = false;
         } else if (token == SQLLexer::Identifier) {
-            lexer.unget(token);
             if (isLeftSideReady) {
-                attrRight = parseAttributeName();
+                attrRight = lexer.getTokenValue();
                 isExpressionReady = true;
                 isJoin = true;
             } else if (!isExpressionReady) {
-                attrLeft = parseAttributeName();
+                attrLeft = lexer.getTokenValue();
                 isLeftSideReady = true;
             } else {
                 throw ParserException("Error in WHERE clause");
@@ -160,8 +133,7 @@ void SQLParser::parseWhere() {
             if (!isLeftSideReady || isExpressionReady) {
                 throw ParserException("Unexpected String constant in WHERE clause");
             }
-            c.type = (token == SQLLexer::String) ? Type::String : Type::Int;
-            c.value = lexer.getTokenValue();
+            constant = lexer.getTokenValue();
             isExpressionReady = true;
             isJoin = false;
         } else if (token == SQLLexer::Eof) {
@@ -172,25 +144,26 @@ void SQLParser::parseWhere() {
 
         if (isExpressionReady) {
             if (isJoin) {
-                result.joinConditions.push_back({attrLeft, attrRight});
+                query.joinConditions.push_back(make_pair(attrLeft, attrRight));
             } else {
-                result.selections.push_back({attrLeft, c});
+                query.selection.push_back(make_pair(attrLeft, constant));
             }
         }
     }
 
 }
 
-SQLParser::Result SQLParser::parse() {
+unique_ptr<Query> SQLParser::parse(Schema* schema) {
+    unique_ptr<Query> q(new Query(schema));
 
-    parseSelect();
-    parseFrom();
-    parseWhere();
+    parseSelect(*q);
+    parseFrom(*q);
+    parseWhere(*q);
 
     if (lexer.getNext() != SQLLexer::Eof) {
         throw ParserException("Syntax error in the query");
     }
 
-    return result;
+    return move(q);
 }
 

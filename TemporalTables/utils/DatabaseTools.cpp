@@ -3,7 +3,7 @@
 
 
 const string DatabaseTools::dbName = "db.cpp";
-const string DatabaseTools::dbNameCompiled = "db.cpp";
+const string DatabaseTools::dbNameCompiled = "db.so";
 const string DatabaseTools::folderTmp = "tmp/";
 const string DatabaseTools::folderTable = "../tbl/";
 //Debug symbols: -g / Additional: -flto  -pipe
@@ -27,6 +27,7 @@ int DatabaseTools::compileFile(string name, string outname) {
 
     boost::format command(cmdBuild);
     command % (folderTmp + name) % (folderTmp + outname);
+    //cout << command << endl;
     return system(command.str().c_str());
 }
 
@@ -104,8 +105,9 @@ string DatabaseTools::parseAndWriteQuery(const string& query, Schema* s) {
         return filename;
     }
 
-    QueryParser q;
-    unique_ptr<Query> qu = q.parse(query, s);
+    SQLLexer lexer(query);
+    SQLParser q(lexer);
+    unique_ptr<Query> qu = q.parse(s);
 
     ofstream myfile;
     myfile.open(folderTmp + filename + ".cpp");
@@ -115,13 +117,24 @@ string DatabaseTools::parseAndWriteQuery(const string& query, Schema* s) {
     myfile << "#include <tuple>" << endl
            << "#include \"db.cpp\"" << endl
            << "#include \"../utils/Types.hpp\"" << endl
-           << "#include <algorithm>" << endl;
+           << "#include <algorithm>" << endl
+           << "#include <iomanip>" << endl;
     myfile << "using namespace std;" << endl;
     myfile << "/* ";
     myfile << qu.get()->toString();
     myfile << " */ " << endl;
-    myfile << "extern \"C\" void query(Database* db) {";
-    myfile << qu.get()->generateQueryCode() << "}";
+    myfile << "extern \"C\" void query(Database* db) {" << endl;
+    if (qu.get()->shouldExplain()) {
+        //Replace special characters
+        string code = qu.get()->generateQueryCode();
+        boost::replace_all(code, "\"", "\\\"");
+        boost::replace_all(code, "\n", "\\n");
+
+        myfile << "cout << \"" << code << "\";" << endl << endl;
+    } else {
+        myfile << qu.get()->generateQueryCode() ;
+    }
+    myfile << "}";
     myfile.close();
 
     return filename;

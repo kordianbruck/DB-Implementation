@@ -1,7 +1,5 @@
 
 #include <iostream>
-#include "parser/SchemaParser.hpp"
-#include "parser/QueryParser.hpp"
 #include "utils/DatabaseTools.h"
 
 int main(int argc, char** argv) {
@@ -38,6 +36,16 @@ int main(int argc, char** argv) {
             break;
         }
 
+        if (line == "1") {
+            line = "Select * from warehouse";
+        } else if (line == "2") {
+            line = "explain Select * from warehouse";
+        } else if (line == "3") {
+            line = "Select * from warehouse where w_id=1";
+        } else if (line == "4") {
+            line = "explain Select * from warehouse where w_id=1";
+        }
+
         if (line == "show schema") {
             cout << schema->toString() << endl;
         } else if (line == "show performance") {
@@ -46,10 +54,10 @@ int main(int argc, char** argv) {
             try {
                 string file = DatabaseTools::parseAndWriteQuery(line, schema);
                 if (DatabaseTools::compileFile(file + ".cpp", file + ".so") == 0) {
-                    cout << "Compiled into: " << file << ". running... " << endl;
+                    cerr << "\tCompiled into: " << file << ". running... " << endl;
                     DatabaseTools::loadAndRunQuery(file + ".so", db);
                 } else {
-                    cout << "Compilation failed..." << endl;
+                    cerr << "\tCompilation failed..." << endl;
                 }
             } catch (ParserError& e) {
                 cerr << e.what() << " on line " << e.where() << endl;

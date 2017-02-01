@@ -18,9 +18,11 @@
 #include <iostream>
 #include <fstream>
 #include "../parser/SchemaParser.hpp"
-#include "../parser/QueryParser.hpp"
+#include "../parserNew/SQLLexer.hpp"
+#include "../parserNew/SQLParser.hpp"
 #include "md5.h"
 #include <boost/format.hpp>
+#include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
 struct Database;

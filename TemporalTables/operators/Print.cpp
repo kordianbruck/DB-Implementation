@@ -18,16 +18,26 @@ Print::Print(Operator& input, vector<IU*>& outVars) : input(input), outVars(outV
 }
 
 string Print::produce() {
-    return input.produce();
+    stringstream out;
+    out << "std::cout << ";
+    for (auto& e: outVars) {
+        out << "\"" << e->attr->name << "\\t\"";
+        if (e != *(outVars.end() - 1)) {
+            out << " << ";
+        }
+    }
+    out << " << std::endl;\n";
+    out << input.produce();
+    return out.str();
 }
 
 string Print::consume(Operator& op) {
     stringstream out;
-    out << "std::cout << ";
+    out  << "std::cout << ";
     for (auto& e: outVars) {
         out << e->attr->name;
         if (e != *(outVars.end() - 1)) {
-            out << " << \" \" << ";
+            out << " << \"\t\" << ";
         }
     }
     out << " << std::endl;\n";

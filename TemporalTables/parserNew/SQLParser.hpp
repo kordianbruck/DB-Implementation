@@ -7,6 +7,8 @@
 #include <vector>
 #include <utility>
 #include "SQLLexer.hpp"
+#include "../parser/Schema.hpp"
+#include "../parser/Query.h"
 
 class SQLLexer;
 
@@ -14,11 +16,11 @@ class SQLParser {
 private:
     SQLLexer& lexer;
 
-    void parseSelect();
+    void parseSelect(Query& query);
 
-    void parseFrom();
+    void parseFrom(Query& query);
 
-    void parseWhere();
+    void parseWhere(Query& query);
 
 public:
     class ParserException : public std::runtime_error {
@@ -30,47 +32,7 @@ public:
 
     ~SQLParser();
 
-
-
-    // relation in the FROM clause
-    struct Relation {
-        std::string name; // table name
-        std::string binding; // binding
-        bool isFullyQualified; // both table name and binding are not empty
-        std::string getName() {
-            return isFullyQualified ? name + " " + binding : name;
-        }
-    };
-
-    // attribute of the relations mentioned in SELECT or WHERE
-    struct RelationAttribute {
-        std::string relation; // relation name
-    };
-
-    // constant mentioned in the condition
-    enum class Type : unsigned {
-        Int, Double, Bool, String
-    };
-
-    struct Constant {
-        SQLParser::Type type;
-        std::string value;
-    };
-
-    // result of the parser
-    struct Result {
-        std::vector<Relation> relations;
-        std::vector<RelationAttribute> projections;
-        std::vector<std::pair<RelationAttribute, Constant>> selections;
-        std::vector<std::pair<RelationAttribute, RelationAttribute>> joinConditions;
-    };
-
-    Result parse();
-
-private:
-    Result result;
-    RelationAttribute parseAttributeName();
-    Relation parseRelation();
+    unique_ptr<Query> parse(Schema* schema);
 };
 
 #endif

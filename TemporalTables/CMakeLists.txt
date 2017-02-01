@@ -4,14 +4,19 @@ project(task5)
 FIND_PACKAGE(Boost 1.63 COMPONENTS program_options REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
-add_executable(runCompile RunCompile.cpp utils/Types.cpp utils/DatabaseTools.cpp parser/Schema.cpp parser/SchemaParser.cpp parser/Query.cpp parser/QueryParser.cpp parser/IU.h utils/md5.cpp
+set(SOURCE_FILES
+        utils/Types.cpp utils/DatabaseTools.cpp
+        parser/Schema.cpp parser/SchemaParser.cpp parser/Query.cpp parser/IU.h parserNew/SQLLexer.cpp parserNew/SQLParser.cpp
+        utils/md5.cpp
         operators/TableScan.cpp operators/TableScan.h operators/Selection.cpp
         operators/Selection.h operators/HashJoin.cpp operators/HashJoin.h operators/Print.cpp
         operators/Print.h operators/Operator.cpp operators/Operator.h )
 
+add_executable(runCompile RunCompile.cpp ${SOURCE_FILES})
+
 add_executable(runBtree BtreeTest.cpp)
 
-add_executable(runParser TestParser.cpp parserNew/SQLLexer.cpp parserNew/SQLParser.cpp)
+add_executable(runParser TestParser.cpp  ${SOURCE_FILES})
 
 TARGET_LINK_LIBRARIES(runCompile ${Boost_LIBRARIES})
 

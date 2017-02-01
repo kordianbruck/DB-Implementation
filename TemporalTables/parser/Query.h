@@ -23,12 +23,16 @@ using conditionType = tuple<string, string>;
 
 class Query {
     friend class QueryParser;
+    friend class SQLParser;
 
     vector<string> projection;
-    bool projectAll = false;
     vector<string> relation;
     vector<conditionType> selection;
     vector<conditionType> joinConditions;
+
+    bool projectAll = false;
+    bool explain = false;
+
     Schema* schema;
 
     vector<tuple<IU*, string>> getSelections(Operator*);
@@ -41,6 +45,10 @@ public:
     string toString() const;
 
     string generateQueryCode();
+
+    bool shouldExplain() {
+        return explain;
+    }
 };
 
 
