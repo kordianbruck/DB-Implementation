@@ -11,6 +11,8 @@ add_executable(runCompile RunCompile.cpp utils/Types.cpp utils/DatabaseTools.cpp
 
 add_executable(runBtree BtreeTest.cpp)
 
+add_executable(runParser TestParser.cpp parserNew/SQLLexer.cpp parserNew/SQLParser.cpp)
+
 TARGET_LINK_LIBRARIES(runCompile ${Boost_LIBRARIES})
 
 SET(CMAKE_CXX_FLAGS "-std=c++1y")
