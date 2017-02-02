@@ -9,7 +9,7 @@ string Schema::type(const Schema::Relation::Attribute& attr, bool cpp) {
     Types::Tag type = attr.type;
     switch (type) {
         case Types::Tag::Integer:return "Integer";
-        case Types::Tag::Datetime:
+        case Types::Tag::Datetime: //TODO use boost datetime
         case Types::Tag::Date:return "Date";
         case Types::Tag::Timestamp:return "Timestamp";
         case Types::Tag::Numeric: {
@@ -120,6 +120,7 @@ string Schema::generateDatabaseCode() const {
 
         //Output the primary key type
         if (hasPK) {
+            //TODO replace with btree
             out << "        using pkType = std::tuple<" << pkListType(rel) << ">;" << endl;
         }
 
@@ -129,6 +130,7 @@ string Schema::generateDatabaseCode() const {
             out << "            " << Schema::type(e, 1) << " " << e.name << ";" << endl;
         }
         if (hasPK) {
+            //TODO replace with btree
             out << "            pkType key() const { return std::make_tuple(" << pkList(rel) << "); }" << endl;
         }
         out << "        };" << endl;
@@ -147,6 +149,7 @@ string Schema::generateDatabaseCode() const {
         //Add the most important table vars
         out << "        std::vector<Row> table{};" << endl;
         if (hasPK) {
+            //TODO replace with btree
             out << "        std::unordered_map<pkType, u_int32_t> pk{};" << endl;
         }
         if (rel.indexes.size() > 0) {

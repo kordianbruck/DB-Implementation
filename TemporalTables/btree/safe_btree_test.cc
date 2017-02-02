@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// TODO(pmattis): Add some tests that iterators are not invalidated by
-// insertion and deletion.
 
 #include <functional>
 #include <map>

@@ -20,5 +20,6 @@ string QueryInsert::toString() const {
 
 string QueryInsert::generateQueryCode() {
     string ret = "";
+    //TODO make insert code generate
     return ret;
 }

@@ -1,6 +1,3 @@
-//
-// Created by hansi on 11/12/16.
-//
 
 #ifndef TASK4_IU_H
 #define TASK4_IU_H

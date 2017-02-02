@@ -1,6 +1,3 @@
-//
-// Created by franz on 24.11.16.
-//
 
 #ifndef TASK5_PARSERERROR_H
 #define TASK5_PARSERERROR_H
