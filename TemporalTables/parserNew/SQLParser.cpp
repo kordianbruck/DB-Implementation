@@ -150,15 +150,31 @@ void SQLParser::parseInsertColumns(QueryInsert* query) {
         throw ParserException("Expected 'INTO' after 'INSERT'");
     }
 
+    //Relation Name
+    if (lexer.getNext() == SQLLexer::Identifier) {
+        query->relation = lexer.getTokenValue();
+    } else {
+        throw ParserException("Expected relation after 'INSERT INTO'");
+    }
+
+    //Open Parenthesis needed
+    token = lexer.getNext();
+    if (token != SQLLexer::Identifier && lexer.isKeyword("values")) {
+        lexer.unget(token);
+        return;
+    } else if (token != SQLLexer::ParOpen) {
+        throw ParserException("Expected '(' after relation name in insert query");
+    }
+
     while (true) {
         token = lexer.getNext();
-        if (token == SQLLexer::Identifier && lexer.isKeyword("values")) {
-            lexer.unget(token);
-            return;
+        cout << to_string(token) << " ";
+        if (token == SQLLexer::ParClose) {
+            break;
         } else if (token == SQLLexer::Identifier) {
             query->fields.push_back(make_pair(lexer.getTokenValue(), ""));
         } else {
-            throw ParserException("Unexpected token: " + lexer.getTokenValue());
+            throw ParserException("Unexpected token in insert column: " + lexer.getTokenValue() + to_string(token));
         }
     }
 
@@ -168,14 +184,20 @@ void SQLParser::parseInsertValues(QueryInsert* query) {
     SQLLexer::Token token = lexer.getNext();
 
     //Check the correct syntax
+    cout << to_string(token) << " ";
     if (token != SQLLexer::Identifier || !lexer.isKeyword("values")) {
         throw ParserException("Expected 'VALUES' with a 'INSERT' query");
+    }
+
+    if (lexer.getNext() != SQLLexer::ParOpen) {
+        throw ParserException("Expected '(' after relation name in insert query");
     }
 
     int currentColumn = 0;
     while (true) {
         token = lexer.getNext();
-        if (token == SQLLexer::Eof) {
+        cout << to_string(token) << " ";
+        if (token == SQLLexer::ParClose) {
             break;
         } else if (token == SQLLexer::String || token == SQLLexer::Integer) {
             if (currentColumn >= query->fields.size()) {
@@ -184,12 +206,12 @@ void SQLParser::parseInsertValues(QueryInsert* query) {
             query->fields[currentColumn].second = lexer.getTokenValue();
             currentColumn++;
         } else {
-            throw ParserException("Unexpected token: " + lexer.getTokenValue());
+            throw ParserException("Unexpected token in insert values: " + lexer.getTokenValue() + to_string(token));
         }
     }
 
-    if (currentColumn != query->fields.size() - 1) {
-        throw ParserException("Columns and Values count mismatch");
+    if (currentColumn != query->fields.size()) {
+        throw ParserException("Columns and Values count mismatch " + to_string(currentColumn) + " vs " + to_string(query->fields.size()));
     }
 }
 
@@ -276,7 +298,7 @@ Query* SQLParser::parse(Schema* schema) {
         //UPDATE table_name SET column1=value1,column2=value2,... WHERE some_column=some_value;
         query = new QueryUpdate(schema);
         if (lexer.getNext() == SQLLexer::Identifier) {
-            dynamic_cast<QueryUpdate&>(*query).relation = lexer.getTokenValue();
+            ((QueryUpdate*) query)->relation = lexer.getTokenValue();
         } else {
             throw ParserException("Expected relation after 'UPDATE'");
         }

@@ -34,12 +34,23 @@ int main(int argc, char** argv) {
         cerr << e.what() << " on line " << e.where() << endl;
     }*/
 
-    SQLLexer lexer3("DELETE FROM warehouse where w_id=5");
+    /*SQLLexer lexer3("DELETE FROM warehouse where w_id=5");
     SQLParser parser3(lexer3);
     try {
         Query* q =  parser3.parse(schema);
 
         cout << "QueryStruct: \n\n" << q->generateQueryCode() << endl;
+        delete q;
+    } catch (ParserError& e) {
+        cerr << e.what() << " on line " << e.where() << endl;
+    }*/
+
+    SQLLexer lexer4("INSERT INTO warehouse (w_id) VALUES (5)");
+    SQLParser parser4(lexer4);
+    try {
+        Query* q =  parser4.parse(schema);
+
+        cout << "QueryStruct: \n\n" << q->toString() << endl;
         delete q;
     } catch (ParserError& e) {
         cerr << e.what() << " on line " << e.where() << endl;
