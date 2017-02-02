@@ -50,7 +50,7 @@ int main(int argc, char** argv) {
     try {
         Query* q =  parser4.parse(schema);
 
-        cout << "QueryStruct: \n\n" << q->toString() << endl;
+        cout << "QueryStruct: \n\n" << q->generateQueryCode() << endl;
         delete q;
     } catch (ParserError& e) {
         cerr << e.what() << " on line " << e.where() << endl;

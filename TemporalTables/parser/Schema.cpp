@@ -8,10 +8,13 @@ using namespace std;
 string Schema::type(const Schema::Relation::Attribute& attr, bool cpp) {
     Types::Tag type = attr.type;
     switch (type) {
-        case Types::Tag::Integer:return "Integer";
+        case Types::Tag::Integer:
+            return "Integer";
         case Types::Tag::Datetime: //TODO use boost datetime
-        case Types::Tag::Date:return "Date";
-        case Types::Tag::Timestamp:return "Timestamp";
+        case Types::Tag::Date:
+            return "Date";
+        case Types::Tag::Timestamp:
+            return "Timestamp";
         case Types::Tag::Numeric: {
             stringstream ss;
             if (!cpp) {
@@ -21,15 +24,22 @@ string Schema::type(const Schema::Relation::Attribute& attr, bool cpp) {
             }
             return ss.str();
         }
-        case Types::Tag::Char:
-        case Types::Tag::Varchar: {
+        case Types::Tag::Char: {
             stringstream ss;
             if (!cpp) {
                 ss << "Char(" << attr.len1 << ")";
             } else {
                 ss << "Char<" << attr.len1 << ">";
             }
-
+            return ss.str();
+        }
+        case Types::Tag::Varchar: {
+            stringstream ss;
+            if (!cpp) {
+                ss << "Varchar(" << attr.len1 << ")";
+            } else {
+                ss << "Varchar<" << attr.len1 << ">";
+            }
             return ss.str();
         }
     }
@@ -113,10 +123,10 @@ string Schema::generateDatabaseCode() const {
     //out << "#include \"btree/btree_map.h\"" << endl;
 
     out << "struct Database {" << endl;
-    out << "private: " << endl;
+    //out << "private: " << endl;
     for (const Schema::Relation& rel : relations) {
         bool hasPK = rel.primaryKey.size() > 0;
-        out << "    struct " << rel.name << "{" << endl;
+        out << "    struct " << rel.getTypeRelationName() << "{" << endl;
 
         //Output the primary key type
         if (hasPK) {
@@ -210,14 +220,14 @@ string Schema::generateDatabaseCode() const {
     out << "    Database(const Database&) = delete;\n"
             "    Database () {}" << endl;
     for (const Schema::Relation& rel : relations) {
-        out << "    " << rel.name << " " << rel.name << ";" << endl;
+        out << "    " << rel.getTypeRelationName() << " " << rel.name << ";" << endl;
     }
 
     //Import: import any data into our database
     out << "    void import(const std::string &path) {" << endl;
     for (const Schema::Relation& rel : relations) {
         out << "       DatabaseTools::loadTableFromFile(" << rel.name << ", path + \"tpcc_" << rel.name << ".tbl\");\n" << endl;
-        out << "       std::cout << \"\\t" << rel.name << ": \" << " << rel.name << ".size() << std::endl;" << endl;
+        out << "       std::cout << \"\\t" << rel.getTypeRelationName() << ": \" << " << rel.name << ".size() << std::endl;" << endl;
     }
     out << "    }" << endl; // End import()
 

@@ -1,5 +1,6 @@
 
 #include <iostream>
+#include <dirent.h>
 #include "utils/DatabaseTools.h"
 
 int main(int argc, char** argv) {
@@ -7,6 +8,10 @@ int main(int argc, char** argv) {
         argv[1] = (char*) "./script/schema_sys_time.sql";
     }
 
+    //Delete old queries
+    system("exec rm -r ./tmp/*");
+
+    //Output a nice header
     cout << "TPC-C Compile" << endl;
     cout << "--------------------------" << endl;
 
@@ -28,8 +33,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    //Output some Info & Enable input
     cout << "Enter a sql query, 'show schema' or 'exit' to quit: " << endl;
-
     string line;
     do {
         if (line == "exit") {
@@ -48,6 +53,8 @@ int main(int argc, char** argv) {
             line = "update warehouse set w_name = 'abc' where w_id=4";
         } else if (line == "6") {
             line = "delete from warehouse where w_id=5";
+        } else if (line == "7") {
+            line = "INSERT INTO warehouse (w_id) VALUES (6)";
         }
 
         if (line == "show schema") {
@@ -58,7 +65,7 @@ int main(int argc, char** argv) {
             try {
                 string file = DatabaseTools::parseAndWriteQuery(line, schema);
                 if (DatabaseTools::compileFile(file + ".cpp", file + ".so") == 0) {
-                    cerr << "\tCompiled into: " << file << ". running... " << endl;
+                    //cerr << "\tCompiled into: " << file << ". running... " << endl;
                     DatabaseTools::loadAndRunQuery(file + ".so", db);
                 } else {
                     cerr << "\tCompilation failed..." << endl;

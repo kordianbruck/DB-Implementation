@@ -5,6 +5,7 @@
 #include <cstring>
 #include <ostream>
 #include <cassert>
+#include <sstream>
 
 //---------------------------------------------------------------------------
 // HyPer
@@ -187,9 +188,11 @@ template<unsigned maxLen>
 std::ostream& operator<<(std::ostream& out, const Varchar<maxLen>& value)
 // Output
 {
+    std::stringstream outTmp;
     for (auto iter = value.begin(), limit = value.end(); iter != limit; ++iter) {
-        out << (*iter);
+        outTmp << (*iter);
     }
+    out << outTmp.str();
     return out;
 }
 
@@ -355,9 +358,11 @@ template<unsigned maxLen>
 std::ostream& operator<<(std::ostream& out, const Char<maxLen>& value)
 // Output
 {
+    std::stringstream outTmp;
     for (auto iter = value.begin(), limit = value.end(); iter != limit; ++iter) {
-        out << (*iter);
+        outTmp << (*iter);
     }
+    out << outTmp.str();
     return out;
 }
 
@@ -605,33 +610,35 @@ template<unsigned len, unsigned precision>
 std::ostream& operator<<(std::ostream& out, const Numeric<len, precision>& value)
 // Dump the value
 {
+    std::stringstream outTmp;
     long v = value.getRaw();
     if (v < 0) {
-        out << '-';
+        outTmp << '-';
         v = -v;
     }
     if (precision == 0) {
-        out << v;
+        outTmp << v;
     } else {
         long sep = 10;
         for (unsigned index = 1, limit = precision; index < limit; index++) {
             sep *= 10;
         }
-        out << (v / sep);
-        out << '.';
+        outTmp << (v / sep);
+        outTmp << '.';
         v = v % sep;
         if (!v) {
             for (unsigned index = 0, limit = precision; index < limit; index++) {
-                out << '0';
+                outTmp << '0';
             }
         } else {
             while (sep > (10 * v)) {
-                out << '0';
+                outTmp << '0';
                 sep /= 10;
             }
-            out << v;
+            outTmp << v;
         }
     }
+    out << outTmp.str();
     return out;
 }
 

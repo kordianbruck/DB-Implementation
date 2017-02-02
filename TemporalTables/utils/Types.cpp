@@ -132,22 +132,22 @@ Date Date::castString(const char* str, uint32_t strLen)
     // Year
     unsigned year = 0;
     while (true) {
-        if (iter == limit) { throw "invalid date format"; }
+        if (iter == limit) { throw "invalid date format @1"; }
         char c = *(iter++);
         if (c == '-') { break; }
         if ((c >= '0') && (c <= '9')) {
             year = 10 * year + (c - '0');
-        } else { throw "invalid date format"; }
+        } else { throw "invalid date format @2"; }
     }
     // Month
     unsigned month = 0;
     while (true) {
-        if (iter == limit) { throw "invalid date format"; }
+        if (iter == limit) { throw "invalid date format @3"; }
         char c = *(iter++);
         if (c == '-') { break; }
         if ((c >= '0') && (c <= '9')) {
             month = 10 * month + (c - '0');
-        } else { throw "invalid date format"; }
+        } else { throw "invalid date format @4"; }
     }
     // Day
     unsigned day = 0;
@@ -156,12 +156,12 @@ Date Date::castString(const char* str, uint32_t strLen)
         char c = *(iter++);
         if ((c >= '0') && (c <= '9')) {
             day = 10 * day + (c - '0');
-        } else { throw "invalid date format"; }
+        } else { throw "invalid date format @5"; }
     }
 
     // Range check
     if ((year > 9999) || (month < 1) || (month > 12) || (day < 1) || (day > 31)) {
-        throw "invalid date format";
+        throw "invalid date format @6";
     }
     Date d;
     d.value = mergeJulianDay(year, month, day);

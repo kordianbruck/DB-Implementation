@@ -275,18 +275,19 @@ void SchemaParser::nextToken(unsigned line, const std::string& token, Schema& sc
                 struct AttributeNamePredicate {
                     const std::string& name;
 
-                    AttributeNamePredicate(const std::string& name) : name(name) { }
+                    AttributeNamePredicate(const std::string& name) : name(name) {}
 
                     bool operator()(const Schema::Relation::Attribute& attr) const {
                         return attr.name == name;
                     }
                 };
-                const auto& attributes = schema.relations.back().attributes;
+                auto& attributes = schema.relations.back().attributes;
                 AttributeNamePredicate p(token);
                 auto it = std::find_if(attributes.begin(), attributes.end(), p);
                 if (it == attributes.end()) {
                     throw ParserError(line, "'" + token + "' is not an attribute of '" + schema.relations.back().name + "'");
                 }
+                (*it).isPartPK = true;
                 schema.relations.back().primaryKey.push_back(std::distance(attributes.begin(), it));
                 state = State::KeyName;
             } else {
@@ -544,6 +545,7 @@ void SchemaParser::nextToken(unsigned line, const std::string& token, Schema& sc
                 state = State::CreateTableEnd;
             } else { throw ParserError(line, "Expected ',' or ')' after attribute definition, found '" + token + "'"); }
             break;
-        default:throw;
+        default:
+            throw;
     }
 }

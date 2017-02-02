@@ -19,7 +19,26 @@ string QueryInsert::toString() const {
 
 
 string QueryInsert::generateQueryCode() {
-    string ret = "";
-    //TODO make insert code generate
-    return ret;
+    stringstream out;
+    Schema::Relation r = schema->findRelation(relation);
+
+    out << "auto r = Database::";
+    out << r.getTypeRelationName() << "::Row{};\n" << endl;
+    out << "try {" << endl;
+    for (auto& field : r.attributes) {
+        string val = "";
+        for (auto& findVal : fields) {
+            if (field.name == findVal.first) {
+                val = findVal.second;
+            }
+        }
+        if (val.length() > 0) {
+            out << "r." << field.name << " = r." << field.name << ".castString(\"" << val << "\", " << val.size() << ");" << endl;
+        } else if (field.type == Types::Tag::Date || field.type == Types::Tag::Datetime) {
+            out << "r." << field.name << " = r." << field.name << ".castString(\"0000-01-01\", 10);" << endl;
+        }
+    }
+    out << "} catch (const char * r) { cout << r << endl; }";
+    out << "    db->warehouse.insert(r);";
+    return out.str();
 }

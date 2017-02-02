@@ -30,14 +30,17 @@ struct Schema {
             //Default val
             bool notNull;
 
-            Attribute() : len1(0), len2(0), notNull(true), generated(false), generatedStart(false), generatedEnd(false) { }
+            //Is this attribute part of the PK?
+            bool isPartPK;
+
+            Attribute() : len1(0), len2(0), notNull(true), generated(false), generatedStart(false), generatedEnd(false), isPartPK(false) {}
         };
 
         struct Index {
             std::string name;
             std::vector<unsigned> keys;
 
-            Index(const std::string& name) : name(name) { }
+            Index(const std::string& name) : name(name) {}
         };
 
         std::string name;
@@ -52,7 +55,18 @@ struct Schema {
 
         Schema::Relation::Attribute& findAttribute(const std::string& name);
 
-        Relation(const std::string& name) : name(name) { }
+        Relation(const std::string& name) : name(name) {}
+
+        string getTypeRelationName() const {
+            string ret = name;
+            if (!ret.empty()) {
+                ret[0] = (char) std::toupper(ret[0]);
+
+                for (std::size_t i = 1; i < name.length(); ++i)
+                    ret[i] = (char) std::tolower(ret[i]);
+            }
+            return ret;
+        }
     };
 
     std::vector<Schema::Relation> relations;

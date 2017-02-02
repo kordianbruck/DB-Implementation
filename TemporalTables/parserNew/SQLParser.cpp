@@ -168,7 +168,6 @@ void SQLParser::parseInsertColumns(QueryInsert* query) {
 
     while (true) {
         token = lexer.getNext();
-        cout << to_string(token) << " ";
         if (token == SQLLexer::ParClose) {
             break;
         } else if (token == SQLLexer::Identifier) {
@@ -184,7 +183,6 @@ void SQLParser::parseInsertValues(QueryInsert* query) {
     SQLLexer::Token token = lexer.getNext();
 
     //Check the correct syntax
-    cout << to_string(token) << " ";
     if (token != SQLLexer::Identifier || !lexer.isKeyword("values")) {
         throw ParserException("Expected 'VALUES' with a 'INSERT' query");
     }
@@ -196,7 +194,6 @@ void SQLParser::parseInsertValues(QueryInsert* query) {
     int currentColumn = 0;
     while (true) {
         token = lexer.getNext();
-        cout << to_string(token) << " ";
         if (token == SQLLexer::ParClose) {
             break;
         } else if (token == SQLLexer::String || token == SQLLexer::Integer) {
