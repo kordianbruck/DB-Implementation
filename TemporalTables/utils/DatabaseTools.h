@@ -21,7 +21,6 @@
 #include "../parserNew/SQLLexer.hpp"
 #include "../parserNew/SQLParser.hpp"
 #include "md5.h"
-#include <boost/format.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 using namespace std;
@@ -33,11 +32,11 @@ struct DatabaseTools {
     static const string dbNameCompiled;
     static const string folderTmp;
     static const string folderTable;
-    static const string cmdBuild;
+    static const char* cmdBuild;
 
     static void split(const std::string& str, std::vector<std::string>& lineChunks);
 
-    static int compileFile(string name, string outname);
+    static int compileFile(const string& name, const string& outname);
 
     static Database* loadAndRunDb(string filename);
 

@@ -8,7 +8,10 @@
 #include <utility>
 #include "SQLLexer.hpp"
 #include "../parser/Schema.hpp"
-#include "../parser/Query.h"
+#include "../query/Select.h"
+#include "../query/Delete.h"
+#include "../query/Insert.h"
+#include "../query/Update.h"
 
 class SQLLexer;
 
@@ -16,23 +19,28 @@ class SQLParser {
 private:
     SQLLexer& lexer;
 
-    void parseSelect(Query& query);
+    void parseSelect(QuerySelect*);
 
-    void parseFrom(Query& query);
+    void parseFrom(QuerySelect*);
 
-    void parseWhere(Query& query);
+    void parseWhere(Query*);
+
+    void parseSet(QueryUpdate*);
+
+    void parseInsertColumns(QueryInsert*);
+    void parseInsertValues(QueryInsert*);
 
 public:
     class ParserException : public std::runtime_error {
     public:
-        ParserException(const std::string& msg);
+        ParserException(const std::string&);
     };
 
-    explicit SQLParser(SQLLexer& lexer);
+    explicit SQLParser(SQLLexer&);
 
     ~SQLParser();
 
-    unique_ptr<Query> parse(Schema* schema);
+    Query* parse(Schema*);
 };
 
 #endif

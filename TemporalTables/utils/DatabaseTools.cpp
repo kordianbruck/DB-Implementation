@@ -7,7 +7,7 @@ const string DatabaseTools::dbNameCompiled = "db.so";
 const string DatabaseTools::folderTmp = "tmp/";
 const string DatabaseTools::folderTable = "../tbl/";
 //Debug symbols: -g / Additional: -flto  -pipe
-const string DatabaseTools::cmdBuild = "g++ -O3 -std=c++14 -fPIC -flto  -pipe %1% -shared -o %2%";
+const char* DatabaseTools::cmdBuild{"g++ -O3 -std=c++14 -fPIC -flto  -pipe %s -shared -o %s\0"};
 
 
 void DatabaseTools::split(const std::string& str, std::vector<std::string>& lineChunks) {
@@ -19,16 +19,17 @@ void DatabaseTools::split(const std::string& str, std::vector<std::string>& line
     }
 }
 
-int DatabaseTools::compileFile(string name, string outname) {
+int DatabaseTools::compileFile(const string& name, const string& outname) {
     ifstream f(folderTmp + outname);
     if (f.good() && outname != dbNameCompiled) { // Only compile if not already on disk
         return 0;
     }
 
-    boost::format command(cmdBuild);
-    command % (folderTmp + name) % (folderTmp + outname);
-    //cout << command << endl;
-    return system(command.str().c_str());
+    char* command = new char[strlen(cmdBuild) + 2 * folderTmp.size() + name.size() + outname.size() + 5];
+    sprintf(command, cmdBuild, (folderTmp + name).c_str(), (folderTmp + outname).c_str());
+    int ret = system(command);
+    delete[] command;
+    return ret;
 }
 
 Database* DatabaseTools::loadAndRunDb(string filename) {
@@ -107,7 +108,7 @@ string DatabaseTools::parseAndWriteQuery(const string& query, Schema* s) {
 
     SQLLexer lexer(query);
     SQLParser q(lexer);
-    unique_ptr<Query> qu = q.parse(s);
+    Query* qu = q.parse(s);
 
     ofstream myfile;
     myfile.open(folderTmp + filename + ".cpp");
@@ -121,18 +122,19 @@ string DatabaseTools::parseAndWriteQuery(const string& query, Schema* s) {
            << "#include <iomanip>" << endl;
     myfile << "using namespace std;" << endl;
     myfile << "/* ";
-    myfile << qu.get()->toString();
+    myfile << qu->toString();
     myfile << " */ " << endl;
     myfile << "extern \"C\" void query(Database* db) {" << endl;
-    if (qu.get()->shouldExplain()) {
+    if (qu->shouldExplain()) {
         //Replace special characters
-        string code = qu.get()->generateQueryCode();
+        string code = qu->generateQueryCode();
         boost::replace_all(code, "\"", "\\\"");
         boost::replace_all(code, "\n", "\\n");
 
-        myfile << "cout << \"" << code << "\";" << endl << endl;
+        myfile << "cout << \"";
+        myfile << code << "\";" << endl << endl;
     } else {
-        myfile << qu.get()->generateQueryCode() ;
+        myfile << qu->generateQueryCode();
     }
     myfile << "}";
     myfile.close();

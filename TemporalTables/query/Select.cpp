@@ -1,32 +1,32 @@
 
 
 
-#include "Query.h"
+#include "Select.h"
 #include "../operators/TableScan.h"
 #include "../operators/Selection.h"
 #include "../operators/HashJoin.h"
-#include "ParserError.h"
+#include "../parser/ParserError.h"
 #include "../operators/Print.h"
 
 using namespace std;
 
 
-string Query::toString() const {
+string QuerySelect::toString() const {
     stringstream out;
     out << "SELECT: ";
-    for (auto e : this->projection) {
+    for (auto& e : this->projection) {
         out << e << " ";
     }
     out << endl << "FROM: ";
-    for (auto e : this->relation) {
+    for (auto& e : this->relations) {
         out << e << " ";
     }
     out << endl << "WHERE: \n\t SEL: ";
-    for (auto e : this->selection) {
+    for (auto& e : this->selection) {
         out << get<0>(e) << "=" << get<1>(e) << " ";
     }
     out << "\n\t JOI: ";
-    for (auto e : this->joinConditions) {
+    for (auto& e : this->joinConditions) {
         out << get<0>(e) << "=" << get<1>(e) << " ";
     }
 
@@ -34,7 +34,7 @@ string Query::toString() const {
 }
 
 
-vector<tuple<IU*, string>> Query::getSelections(Operator* op) {
+vector<tuple<IU*, string>> QuerySelect::getSelections(Operator* op) {
     vector<tuple<IU*, string>> conditions;
     auto operatorIUs = op->getProduced();
 
@@ -51,7 +51,7 @@ vector<tuple<IU*, string>> Query::getSelections(Operator* op) {
     return conditions;
 }
 
-vector<tuple<IU*, IU*>> Query::getJoinConditions(Operator* left, Operator* right) {
+vector<tuple<IU*, IU*>> QuerySelect::getJoinConditions(Operator* left, Operator* right) {
     vector<tuple<IU*, IU*>> conditions;
     auto leftIUs = left->getProduced();
     auto rightIUs = right->getProduced();
@@ -70,12 +70,12 @@ vector<tuple<IU*, IU*>> Query::getJoinConditions(Operator* left, Operator* right
     return conditions;
 }
 
-string Query::generateQueryCode() {
+string QuerySelect::generateQueryCode() {
 
     //Generate all tablescans with selections
     stack<Operator*> ops;
-    for (auto r : relation) {
-        //for (auto i = relation.size(); i > 0; i--) {
+    for (auto r : relations) {
+        //for (auto i = relations.size(); i > 0; i--) {
         auto ts = new TableScan(schema->findRelation(r));
         auto selectionConditions = getSelections(ts);
 

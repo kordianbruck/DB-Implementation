@@ -5,7 +5,18 @@
 
 class SQLLexer {
 public:
-	enum Token {None, Error, Eof, String, Integer, Identifier, Comma, Star, Dot, Equal, NotEqual, And, Not, Plus, Minus};
+	enum Token {
+		None,//0
+		Error, //1
+		Eof, //2
+		String, //3
+		Integer, //4
+		Identifier, //5
+		Comma, //6
+		Star, //7
+		Dot, //8
+		Equal, //9
+		NotEqual, And, Not, Plus, Minus};
 private:
 	// input string
 	std::string input;

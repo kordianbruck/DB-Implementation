@@ -6,7 +6,8 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 set(SOURCE_FILES
         utils/Types.cpp utils/DatabaseTools.cpp
-        parser/Schema.cpp parser/SchemaParser.cpp parser/Query.cpp parser/IU.h parserNew/SQLLexer.cpp parserNew/SQLParser.cpp
+        parser/Schema.cpp parser/SchemaParser.cpp parser/IU.h parserNew/SQLLexer.cpp parserNew/SQLParser.cpp
+        query/Query.cpp query/Select.cpp query/Insert.cpp query/Delete.cpp query/Update.cpp
         utils/md5.cpp
         operators/TableScan.cpp operators/TableScan.h operators/Selection.cpp
         operators/Selection.h operators/HashJoin.cpp operators/HashJoin.h operators/Print.cpp
@@ -19,6 +20,7 @@ add_executable(runBtree BtreeTest.cpp)
 add_executable(runParser TestParser.cpp  ${SOURCE_FILES})
 
 TARGET_LINK_LIBRARIES(runCompile ${Boost_LIBRARIES})
+TARGET_LINK_LIBRARIES(runParser ${Boost_LIBRARIES})
 
 SET(CMAKE_CXX_FLAGS "-std=c++1y")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -fshow-column -pipe -march=native -ldl -lrt")

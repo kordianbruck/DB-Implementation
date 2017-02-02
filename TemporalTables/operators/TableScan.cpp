@@ -19,7 +19,7 @@ TableScan::~TableScan() {
 
 string TableScan::produce() {
     stringstream out;
-    out << "for(const auto& r: db->" << relation.name << ".table) { //Start for: " << relation.name << endl; //TODO replace rel with relation table
+    out << "for(const auto& r: db->" << relation.name << ".table) { //Start for: " << relation.name << endl; //TODO replace rel with relations table
     for (const auto e : consumer->getRequired()) {
         if (e->rel == this) {
             out << "auto " << e->attr->name << " = " << "r." << e->attr->name << ";" << endl;
