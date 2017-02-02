@@ -11,7 +11,7 @@ string QueryInsert::toString() const {
     out << relation << endl;
     out << "Fields: \n\t ";
     for (auto& e : fields) {
-        out << get<0>(e) << "=" << get<1>(e) << " ";
+        out << e.first << "=" << e.second << " ";
     }
 
     return out.str();
