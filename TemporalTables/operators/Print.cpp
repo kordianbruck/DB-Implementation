@@ -9,6 +9,9 @@
 
 Print::Print(Operator& input, vector<IU*>& outVars) : input(input), outVars(outVars) {
     input.setConsumer(this);
+    sort(outVars.begin(), outVars.end(), [ ]( const IU* lhs, const IU* rhs ) {
+        return lhs->attr->name < rhs->attr->name;
+    });
     for (auto& e : outVars) {
         this->required.insert(e);
     }
