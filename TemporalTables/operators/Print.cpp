@@ -10,8 +10,6 @@
 Print::Print(Operator& input, vector<IU*>& outVars) : input(input), outVars(outVars) {
     input.setConsumer(this);
     for (auto& e : outVars) {
-        //TODO enable once hashmap shows correctly produced cols
-        //cout << op.findProducedAttribute(e)->name << endl;
         this->required.insert(e);
     }
     this->produced.insert(input.getProduced().begin(), input.getProduced().end());

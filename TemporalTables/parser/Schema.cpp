@@ -237,7 +237,7 @@ Schema::Relation& Schema::findRelation(const string& name) {
             return e;
         }
     }
-    throw ParserError(0, "No such table for index: '" + name + "'");
+    throw ParserError(0, "No such table: '" + name + "'");
 }
 
 int Schema::Relation::findAttributeIndex(const string& name) {

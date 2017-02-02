@@ -11,7 +11,7 @@ set(SOURCE_FILES
         utils/md5.cpp
         operators/TableScan.cpp operators/TableScan.h operators/Selection.cpp
         operators/Selection.h operators/HashJoin.cpp operators/HashJoin.h operators/Print.cpp
-        operators/Print.h operators/Operator.cpp operators/Operator.h )
+        operators/Print.h operators/Operator.cpp operators/Operator.h operators/Update.cpp )
 
 add_executable(runCompile RunCompile.cpp ${SOURCE_FILES})
 

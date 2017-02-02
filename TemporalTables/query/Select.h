@@ -16,10 +16,6 @@ class QuerySelect : public Query  {
 
     Schema* schema;
 
-    vector<tuple<IU*, string>> getSelections(Operator*);
-
-    vector<tuple<IU*, IU*>> getJoinConditions(Operator*, Operator*);
-
 public:
     QuerySelect(Schema* s) : schema(s) { }
 

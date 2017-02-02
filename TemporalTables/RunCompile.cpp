@@ -44,6 +44,8 @@ int main(int argc, char** argv) {
             line = "Select * from warehouse where w_id=1";
         } else if (line == "4") {
             line = "explain Select * from warehouse where w_id=1";
+        } else if (line == "5") {
+            line = "update warehouse set w_name = 'abc' where w_id=4";
         }
 
         if (line == "show schema") {

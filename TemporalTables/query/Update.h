@@ -3,6 +3,8 @@
 #define QUERYUPDATE_H
 
 #include "Query.h"
+#include "../operators/Selection.h"
+#include "../operators/Update.h"
 
 using namespace std;
 
@@ -14,8 +16,11 @@ class QueryUpdate : public Query {
 
     Schema* schema;
 
+    vector<fieldType> getFields(Operator*);
+
 public:
     QueryUpdate(Schema* s) : schema(s) { }
+
     ~QueryUpdate() { }
 
     virtual string toString() const;
