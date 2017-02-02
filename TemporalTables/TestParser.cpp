@@ -23,10 +23,21 @@ int main(int argc, char** argv) {
         cerr << e.what() << " on line " << e.where() << endl;
     }*/
 
-    SQLLexer lexer2("update warehouse set w_name = 'abc' where w_id=4");
+    /*SQLLexer lexer2("update warehouse set w_name = 'abc' where w_id=4");
     SQLParser parser2(lexer2);
     try {
         Query* q =  parser2.parse(schema);
+
+        cout << "QueryStruct: \n\n" << q->generateQueryCode() << endl;
+        delete q;
+    } catch (ParserError& e) {
+        cerr << e.what() << " on line " << e.where() << endl;
+    }*/
+
+    SQLLexer lexer3("DELETE FROM warehouse where w_id=5");
+    SQLParser parser3(lexer3);
+    try {
+        Query* q =  parser3.parse(schema);
 
         cout << "QueryStruct: \n\n" << q->generateQueryCode() << endl;
         delete q;

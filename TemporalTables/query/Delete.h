@@ -3,6 +3,8 @@
 #define QUERYDELETE_H
 
 #include "Query.h"
+#include "../operators/Selection.h"
+#include "../operators/Delete.h"
 
 using namespace std;
 
@@ -10,8 +12,6 @@ class QueryDelete : public Query {
     friend class SQLParser;
 
     string relation;
-    vector<conditionType> selection;
-
     Schema* schema;
 
 public:

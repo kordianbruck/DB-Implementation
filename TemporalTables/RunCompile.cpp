@@ -46,6 +46,8 @@ int main(int argc, char** argv) {
             line = "explain Select * from warehouse where w_id=1";
         } else if (line == "5") {
             line = "update warehouse set w_name = 'abc' where w_id=4";
+        } else if (line == "6") {
+            line = "delete from warehouse where w_id=5";
         }
 
         if (line == "show schema") {

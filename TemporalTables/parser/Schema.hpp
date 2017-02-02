@@ -22,9 +22,12 @@ struct Schema {
             unsigned len1;
             unsigned len2;
 
+            //Temporal Tables
             bool generated;
             bool generatedStart;
             bool generatedEnd;
+
+            //Default val
             bool notNull;
 
             Attribute() : len1(0), len2(0), notNull(true), generated(false), generatedStart(false), generatedEnd(false) { }

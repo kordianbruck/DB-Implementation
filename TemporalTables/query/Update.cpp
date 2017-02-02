@@ -36,12 +36,11 @@ vector<fieldType> QueryUpdate::getFields(Operator* sel) {
 
 string QueryUpdate::generateQueryCode() {
     ostringstream out;
-    //Find item
+
     Operator* finder;
     auto ts = new TableScan(schema->findRelation(relation));
     auto selectionConditions = getSelections(ts);
 
-    //If we got matching selections, why not directly add them with a selection
     if (selectionConditions.size() > 0) {
         finder = new Selection(shared_ptr<TableScan>(ts), selectionConditions);
     } else {

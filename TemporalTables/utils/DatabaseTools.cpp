@@ -7,7 +7,7 @@ const string DatabaseTools::dbNameCompiled = "db.so";
 const string DatabaseTools::folderTmp = "tmp/";
 const string DatabaseTools::folderTable = "../tbl/";
 //Debug symbols: -g / Additional: -flto  -pipe
-const char* DatabaseTools::cmdBuild{"g++ -O3 -std=c++14 -fPIC -flto  -pipe %s -shared -o %s\0"};
+const char* DatabaseTools::cmdBuild{"g++ -O3 -std=c++14 -fPIC -flto -ggdb3 -O0 -DDEBUG -pipe %s -shared -o %s\0"};
 
 
 void DatabaseTools::split(const std::string& str, std::vector<std::string>& lineChunks) {

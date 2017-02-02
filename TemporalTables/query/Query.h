@@ -16,6 +16,7 @@
 #include "../parser/IU.h"
 
 using conditionType = pair<string, string>;
+using selectionType = vector<pair<IU*, string>>;
 
 class Query {
     friend class SQLParser;
@@ -26,16 +27,16 @@ protected:
     vector<conditionType> selection;
     vector<conditionType> joinConditions;
 
-    vector<tuple<IU*, string>> getSelections(Operator* op) {
-        vector<tuple<IU*, string>> conditions;
+    selectionType getSelections(Operator* op) {
+        selectionType conditions;
         auto operatorIUs = op->getProduced();
 
         //Iterate through all selections
         for (auto& s : selection) {
             //Check all produced operators
             for (auto iu : operatorIUs) {
-                if (iu->attr->name == get<0>(s)) { // if they match, add the iu and selection value to the list
-                    conditions.emplace_back(make_tuple(iu, get<1>(s)));
+                if (iu->attr->name == s.first) { // if they match, add the iu and selection value to the list
+                    conditions.emplace_back(make_pair(iu, s.second));
                 }
             }
         }

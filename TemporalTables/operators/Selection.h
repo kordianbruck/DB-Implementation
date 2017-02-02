@@ -4,13 +4,14 @@
 
 #include "Operator.h"
 #include "TableScan.h"
+#include "../query/Query.h"
 
 class Selection:public  Operator  {
     shared_ptr<Operator> input;
-    vector<tuple<IU*, string>> conditions;
+    selectionType conditions;
 
 public:
-    Selection(shared_ptr<Operator> input, vector<tuple<IU*, string>> condition);
+    Selection(shared_ptr<Operator> input, selectionType condition);
 
     string produce() override;
     string consume(Operator&) override;

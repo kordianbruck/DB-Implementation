@@ -3,10 +3,10 @@
 #include "Selection.h"
 #include "../parser/IU.h"
 
-Selection::Selection(shared_ptr<Operator> in, vector<tuple<IU*, string>> cond) : input(in), conditions(cond) {
+Selection::Selection(shared_ptr<Operator> in, selectionType cond) : input(in), conditions(cond) {
     input->setConsumer(this);
     for (auto& c : conditions) {
-        this->required.insert(get<0>(c));
+        this->required.insert(c.first);
     }
     this->produced.insert(input->getProduced().begin(), input->getProduced().end());
 }

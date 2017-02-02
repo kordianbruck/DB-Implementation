@@ -300,7 +300,7 @@ Query* SQLParser::parse(Schema* schema) {
 
         //We need a relation we want to delete from
         if (lexer.getNext() == SQLLexer::Identifier) {
-            dynamic_cast<QueryUpdate&>(*query).relation = lexer.getTokenValue();
+            ((QueryDelete*) query)->relation = lexer.getTokenValue();
         } else {
             throw ParserException("Expected relation after 'DELETE FROM'");
         }
