@@ -27,15 +27,19 @@ string Delete::produce() {
         }
 
         if (canDoPK) {
-            stringstream out;
-            out << "db->" << rel.name << ".remove(db->" << rel.name << ".pk[make_tuple(";
+            stringstream out, keyTuple;
+            string table = "db->" + rel.name;
+            string key = table + ".pk";
+
+            //Create the PK tuple
+            keyTuple << "make_tuple(";
             for (auto& pkAttrKey : rel.primaryKey) {
                 for (auto& selection : selections) {
                     if (selection.first->attr->name == rel.attributes[pkAttrKey].name) {
-                        if(selection.first->attr->type == Types::Tag::Integer) {
-                            out << selection.second;
-                        } else if(selection.first->attr->type == Types::Tag::Integer) {
-                            out << "\"" << selection.second << "\"";
+                        if (selection.first->attr->type == Types::Tag::Integer) {
+                            keyTuple << selection.second;
+                        } else if (selection.first->attr->type == Types::Tag::Integer) {
+                            keyTuple << "\"" << selection.second << "\"";
                         } else {
                             throw ParserError(0, "Type in key not supported in deletes");
                         }
@@ -44,10 +48,16 @@ string Delete::produce() {
                 }
 
                 if (pkAttrKey != *(rel.primaryKey.end() - 1)) {
-                    out << ", ";
+                    keyTuple << ", ";
                 }
             }
-            out << ")]);" << endl;
+            keyTuple << ")";
+
+            //Output the code
+            out << "auto iter = " << key << ".find(" << keyTuple.str() << ");" << endl;
+            out << "if(iter != " << key << ".end()) {" << endl;
+            out << "\t" << table << ".remove(iter->second);" << endl;
+            out << "}" << endl;
             return out.str();
         }
     }

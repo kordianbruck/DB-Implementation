@@ -15,6 +15,7 @@ set(SOURCE_FILES
         operators/Update.cpp operators/Delete.cpp )
 
 add_executable(runCompile RunCompile.cpp ${SOURCE_FILES})
+add_executable(runDb RunDb.cpp ${SOURCE_FILES})
 
 add_executable(runBtree BtreeTest.cpp)
 
@@ -24,7 +25,7 @@ TARGET_LINK_LIBRARIES(runCompile ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES(runParser ${Boost_LIBRARIES})
 
 SET(CMAKE_CXX_FLAGS "-std=c++1y")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -fshow-column -pipe -march=native -ldl -lrt")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -fshow-column -pipe -march=native -ldl -lrt ")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENABLE_DEBUG_MACRO -fsanitize=undefined -fsanitize=address -fsanitize=leak -ggdb3 -O0 -DDEBUG")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -flto -DNDEBUG -ggdb")
 

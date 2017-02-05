@@ -8,13 +8,10 @@ using namespace std;
 string Schema::type(const Schema::Relation::Attribute& attr, bool cpp) {
     Types::Tag type = attr.type;
     switch (type) {
-        case Types::Tag::Integer:
-            return "Integer";
+        case Types::Tag::Integer:return "Integer";
         case Types::Tag::Datetime: //TODO use boost datetime
-        case Types::Tag::Date:
-            return "Date";
-        case Types::Tag::Timestamp:
-            return "Timestamp";
+        case Types::Tag::Date:return "Date";
+        case Types::Tag::Timestamp:return "Timestamp";
         case Types::Tag::Numeric: {
             stringstream ss;
             if (!cpp) {
@@ -107,7 +104,8 @@ string Schema::toString() const {
 
 string Schema::generateDatabaseCode() const {
     stringstream out;
-    out << "#include <iostream>" << endl
+    out << "#pragma once " << endl
+        << "#include <iostream>" << endl
         << "#include <cstdint>" << endl
         << "#include <fstream>" << endl
         << "#include <vector>" << endl
