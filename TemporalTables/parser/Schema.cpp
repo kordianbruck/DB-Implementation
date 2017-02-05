@@ -104,8 +104,7 @@ string Schema::toString() const {
 
 string Schema::generateDatabaseCode() const {
     stringstream out;
-    out << "#pragma once " << endl
-        << "#include <iostream>" << endl
+    out << "#include <iostream>" << endl
         << "#include <cstdint>" << endl
         << "#include <fstream>" << endl
         << "#include <vector>" << endl
