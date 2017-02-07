@@ -44,7 +44,7 @@ int main(int argc, char** argv) {
     }
 
     //Output some Info & Enable input
-    cout << "Enter a sql query, 'show queries', 'show schema' or 'exit' to quit: " << endl;
+    cout << "Enter a sql query, 'show queries', 'run <query>', 'show performance', 'show schema' or 'exit' to quit: " << endl;
     string line;
     do {
         //Do we want to exit?
@@ -72,7 +72,7 @@ int main(int argc, char** argv) {
         } else if (line == "show schema") { //Display the database schema
             cout << schema->toString() << endl;
         } else if (line == "show performance") { //Performance test the database
-            cout << schema->toString() << endl;
+            DatabaseTools::performanceTest(schema);
         } else if (line != "") { //Actually proccess queries
             try {
                 string file = DatabaseTools::parseAndWriteQuery(line, schema);

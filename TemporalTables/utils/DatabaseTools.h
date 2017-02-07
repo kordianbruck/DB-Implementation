@@ -46,6 +46,8 @@ struct DatabaseTools {
 
     static string parseAndWriteQuery(const string& query, Schema* s);
 
+    static void performanceTest( Schema* s);
+
     template<typename T>
     static void loadTableFromFile(T& tbl, const std::string& file) {
         std::ifstream myfile(file);

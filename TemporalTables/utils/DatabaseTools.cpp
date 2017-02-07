@@ -141,3 +141,18 @@ string DatabaseTools::parseAndWriteQuery(const string& query, Schema* s) {
 
     return filename;
 }
+
+void DatabaseTools::performanceTest(Schema* s) {
+    cout << "Testing performance..." << endl;
+
+    //Load all queries
+    string queries[2];
+    queries[0] = DatabaseTools::parseAndWriteQuery("INSERT INTO warehouse (w_id) VALUES ()", s);
+    DatabaseTools::compileFile(queries[0] + ".cpp", queries[0] + ".so");
+
+    queries[1] = DatabaseTools::parseAndWriteQuery("SELECT w_id FROM warehouse", s);
+    DatabaseTools::compileFile(queries[1] + ".cpp", queries[1] + ".so");
+
+    //TODO
+    //Manually do a compiled insert + update vs one update
+}
