@@ -18,8 +18,8 @@
 #include <iostream>
 #include <fstream>
 #include "../parser/SchemaParser.hpp"
-#include "../parserNew/SQLLexer.hpp"
-#include "../parserNew/SQLParser.hpp"
+#include "../parser/SQLLexer.hpp"
+#include "../parser/SQLParser.hpp"
 #include "md5.h"
 #include <boost/algorithm/string/replace.hpp>
 

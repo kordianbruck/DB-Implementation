@@ -1,5 +1,5 @@
-#include "parserNew/SQLLexer.hpp"
-#include "parserNew/SQLParser.hpp"
+#include "parser/SQLLexer.hpp"
+#include "parser/SQLParser.hpp"
 #include "utils/DatabaseTools.h"
 #include <string>
 #include <iostream>

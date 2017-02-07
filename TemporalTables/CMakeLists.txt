@@ -6,7 +6,7 @@ INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
 set(SOURCE_FILES
         utils/Types.cpp utils/DatabaseTools.cpp
-        parser/Schema.cpp parser/SchemaParser.cpp parser/IU.h parserNew/SQLLexer.cpp parserNew/SQLParser.cpp
+        parser/Schema.cpp parser/SchemaParser.cpp parser/IU.h parser/SQLLexer.cpp parser/SQLParser.cpp
         query/Query.cpp query/Select.cpp query/Insert.cpp query/Delete.cpp query/Update.cpp
         utils/md5.cpp
         operators/TableScan.cpp operators/TableScan.h operators/Selection.cpp

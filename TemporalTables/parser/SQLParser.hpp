@@ -7,7 +7,7 @@
 #include <vector>
 #include <utility>
 #include "SQLLexer.hpp"
-#include "../parser/Schema.hpp"
+#include "Schema.hpp"
 #include "../query/Select.h"
 #include "../query/Delete.h"
 #include "../query/Insert.h"
