@@ -1,6 +1,6 @@
+#include <iostream>
 #include "Types.hpp"
 //---------------------------------------------------------------------------
-#include <ctime>
 //---------------------------------------------------------------------------
 // HyPer
 // (c) Thomas Neumann 2010
@@ -53,8 +53,8 @@ Integer Integer::castString(const char* str, uint32_t strLen)
         }
     }
 
-    if (digitsSeen > 10) {
-        throw "invalid number format: too many characters (32bit integers can at most consist of 10 numeric characters)";
+    if (digitsSeen > 20) {
+        throw "invalid number format: too many characters (32bit integers can at most consist of 20 numeric characters)";
     }
 
     Integer r;
@@ -87,6 +87,13 @@ static unsigned mergeJulianDay(unsigned year, unsigned month, unsigned day)
 static void splitJulianDay(unsigned jd, unsigned& year, unsigned& month, unsigned& day)
 // Algorithm from the Calendar FAQ
 {
+    if (jd == 0) {
+        year = 0;
+        month = 0;
+        day = 0;
+        return;
+    }
+
     unsigned a = jd + 32044;
     unsigned b = (4 * a + 3) / 146097;
     unsigned c = a - ((146097 * b) / 4);
@@ -180,6 +187,14 @@ Timestamp Timestamp::null() { // NULL
     return result;
 }
 
+Timestamp Timestamp::now() {
+    using namespace std::chrono;
+    Timestamp ret;
+    ret.value = ((uint64_t) duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count())
+                + (uint64_t) mergeJulianDay(1970, 1, 1) * msPerDay;
+    return ret;
+}
+
 //---------------------------------------------------------------------------
 static void splitTime(unsigned value, unsigned& hour, unsigned& minute, unsigned& second, unsigned& ms)
 // Split ms since midnight
@@ -198,7 +213,7 @@ std::ostream& operator<<(std::ostream& out, const Timestamp& value)
 // Output
 {
     if (value == Timestamp::null()) {
-        out << "NULL";
+        return out << "NULL";
     }
 
     unsigned year, month, day;

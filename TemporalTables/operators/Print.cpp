@@ -28,8 +28,10 @@ Print::Print(Operator& input, vector<IU*>& outVars) : input(input), outVars(outV
 }
 
 int getColumnWidth(Schema::Relation::Attribute* a) {
-    if (a->type == Types::Tag::Date || a->type == Types::Tag::Datetime) {
+    if (a->type == Types::Tag::Date) {
         return 15;
+    } else if (a->type == Types::Tag::Datetime) {
+        return 25;
     } else if (a->type == Types::Tag::Integer) {
         return 10;
     } else {

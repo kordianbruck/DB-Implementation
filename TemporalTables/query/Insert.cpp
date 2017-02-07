@@ -34,7 +34,9 @@ string QueryInsert::generateQueryCode() {
         }
         if (val.length() > 0) {
             out << "r." << field.name << " = r." << field.name << ".castString(\"" << val << "\", " << val.size() << ");" << endl;
-        } else if (field.type == Types::Tag::Date || field.type == Types::Tag::Datetime) {
+        } else if (field.type == Types::Tag::Date) {
+            out << "r." << field.name << " = r." << field.name << ".castString(\"0000-01-01\", 10);" << endl;
+        } else if (field.type == Types::Tag::Datetime) {
             out << "r." << field.name << " = r." << field.name << ".castString(\"0000-01-01\", 10);" << endl;
         }
     }

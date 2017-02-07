@@ -3,7 +3,7 @@
 #include <dirent.h>
 #include "utils/DatabaseTools.h"
 #include "tmp/db.cpp"
-#include "tmp/query_ac8eb0b60eca3b3ed091e5271f952166.cpp"
+//#include "tmp/query_910dd58f34f7307fb5634b01dfde16ea.cpp"
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -27,9 +27,7 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    query(db);
-    query(db);
-    query(db);
+    //query(db);
 
     //Turn off warnings caused by generated Database code, that is not available at compile time
 #pragma GCC diagnostic push

@@ -6,6 +6,7 @@
 #include <ostream>
 #include <cassert>
 #include <sstream>
+#include <chrono>
 
 //---------------------------------------------------------------------------
 // HyPer
@@ -38,11 +39,11 @@ struct LengthIndicator {
 /// Integer class
 class Integer {
 public:
-    int32_t value;
+    int64_t value;
 
     Integer() { }
 
-    Integer(int32_t value) : value(value) { }
+    Integer(int64_t value) : value(value) { }
 
     /// Hash
     inline uint64_t hash() const;
@@ -697,6 +698,9 @@ public:
 
     /// NULL
     static Timestamp null();
+
+    /// Current time
+    static Timestamp now();
 
     /// The value
     unsigned getRaw() const { return value; }
