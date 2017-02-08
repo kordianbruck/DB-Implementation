@@ -102,8 +102,7 @@ string Schema::toString() const {
     return out.str();
 }
 
-string Schema::generateDatabaseCode() const {
-    stringstream out;
+void Schema::genIncludes(ostream& out) const {
     out << "#include <iostream>" << endl
         << "#include <cstdint>" << endl
         << "#include <fstream>" << endl
@@ -118,119 +117,135 @@ string Schema::generateDatabaseCode() const {
         << "#include \"../utils/DatabaseTools.h\"" << endl
         << "#include \"../utils/TupelHash.h\"" << endl;
     //out << "#include \"btree/btree_map.h\"" << endl;
+}
+
+void Schema::genRowDef(ostream& out, const Schema::Relation& rel, bool hasPK) const {
+    //Output the Row Type
+    out << "        struct Row {" << endl;
+    for (auto e : rel.attributes) {
+        out << "            " << Schema::type(e, 1) << " " << e.name << ";" << endl;
+    }
+    if (hasPK) {
+        out << "            pkType key() const { return std::make_tuple(" << pkList(rel) << "); }" << endl;
+    }
+    out << "        };" << endl;
+
+    //Output the parsing algo
+    out << "        static Row parse(const std::vector<std::string>& row) {" << endl;
+    out << "            auto ret = Row{};" << endl;
+    int i = 0;
+    for (auto e : rel.attributes) {
+        out << "            ret." << e.name << " = ret." << e.name << ".castString(row[" << i << "].c_str(), row[" << i << "].length());" << endl;
+        i++;
+    }
+    out << "            return ret;" << endl;
+    out << "        }" << endl;
+}
+
+void Schema::genRelation(ostream& out, const Schema::Relation& rel) const {
+    bool hasPK = rel.primaryKey.size() > 0;
+    out << "    struct " << rel.getTypeRelationName() << "{" << endl;
+
+    //Output the primary key type
+    if (hasPK) {
+        out << "        using pkType = std::tuple<" << pkListType(rel) << ">;" << endl;
+    }
+
+    genRowDef(out, rel, hasPK);
+
+    //Add the most important table vars
+    out << "        std::vector<Row> table{};" << endl;
+    if (hasPK) {
+        out << "        std::unordered_map<pkType, u_int32_t> pk{};" << endl;
+    }
+    /*if (rel.indexes.size() > 0) {
+        for (auto& e : rel.indexes) {
+            out << "        //TODO ADD INDEXES" << endl;
+        }
+    }*/
+
+    //Some table functions that are useful
+    out << "        size_t size() { return table.size(); }" << endl;
+    if (hasPK) {
+        out << "        Row& row(pkType k) { return table[pk[k]]; }" << endl;
+    }
+    out << "        Row& row(size_t i) { return table[i]; }" << endl;
+
+    if (hasPK) { //Don't allow updating rows, if the table does not have a PK
+        out << "        void update(Row& element) { table[pk[element.key()]] = element; }" << endl;
+    }
+
+    //Removing elements
+    out << "        void remove(size_t i) {" << endl;
+    if (hasPK) {
+        out << "            const auto key = row(i).key();" << endl;
+        out << "            pk.erase(key);" << endl;
+
+    }
+    out << "            std::iter_swap(table.begin() +i, table.end()-1);\n";
+    out << "            table.pop_back();" << endl;
+    if (hasPK) {
+        out << "            pk[table[i].key()] = i;" << endl;
+    }
+    out << "        }" << endl;
+
+    //Inserting
+    out << "        void insert(const Row& element) { " << endl;
+    out << "            table.push_back(element); " << endl;
+    if (hasPK) {
+        out << "            pk[element.key()] = table.size() - 1;" << endl;
+    }
+    out << "        }" << endl;
+
+    //Creating the index as a bulk operation
+    /*if (hasPK) {
+        out << "        void buildIndex() {" << endl;
+        out << "            size_t size = table.size();" << endl;
+        out << "            pk.reserve(size);" << endl;
+        out << "            for (size_t i = 0; i < size; i++) {" << endl;
+        out << "                pk[table[i].key()] = i;" << endl;
+        out << "            }" << endl;
+        out << "        }" << endl;
+    }*/
+
+    //End the schema struct
+    out << "    };" << endl;
+}
+
+string Schema::generateDatabaseCode() const {
+    stringstream out;
+    genIncludes(out);
 
     out << "struct Database {" << endl;
     //out << "private: " << endl;
     for (const Schema::Relation& rel : relations) {
-        bool hasPK = rel.primaryKey.size() > 0;
-        out << "    struct " << rel.getTypeRelationName() << "{" << endl;
-
-        //Output the primary key type
-        if (hasPK) {
-            //TODO replace with btree
-            out << "        using pkType = std::tuple<" << pkListType(rel) << ">;" << endl;
-        }
-
-        //Output the Row Type
-        out << "        struct Row {" << endl;
-        for (auto e : rel.attributes) {
-            out << "            " << Schema::type(e, 1) << " " << e.name << ";" << endl;
-        }
-        if (hasPK) {
-            //TODO replace with btree
-            out << "            pkType key() const { return std::make_tuple(" << pkList(rel) << "); }" << endl;
-        }
-        out << "        };" << endl;
-
-        //Output the parsing algo
-        out << "        static Row parse(const std::vector<std::string>& row) {" << endl;
-        out << "            auto ret = Row{};" << endl;
-        int i = 0;
-        for (auto e : rel.attributes) {
-            out << "            ret." << e.name << " = ret." << e.name << ".castString(row[" << i << "].c_str(), row[" << i << "].length());" << endl;
-            i++;
-        }
-        out << "            return ret;" << endl;
-        out << "        }" << endl;
-
-        //Add the most important table vars
-        out << "        std::vector<Row> table{};" << endl;
-        if (hasPK) {
-            //TODO replace with btree
-            out << "        std::unordered_map<pkType, u_int32_t> pk{};" << endl;
-        }
-        if (rel.indexes.size() > 0) {
-            for (auto e : rel.indexes) {
-                out << "        //TODO ADD INDEXES AS MULTIMAP" << endl;
-                //    out << "        std::unordered_multimap<..."
-            }
-        }
-
-        //Some table functions that are useful
-        out << "        size_t size() { return table.size(); }" << endl;
-        if (hasPK) {
-            out << "        Row& row(pkType k) { return table[pk[k]]; }" << endl;
-        }
-        out << "        Row& row(size_t i) { return table[i]; }" << endl;
-
-        if (hasPK) { //Don't allow updating rows, if the table does not have a PK
-            out << "        void update(Row& element) { table[pk[element.key()]] = element; }" << endl;
-        }
-
-        //Removing elements
-        out << "        void remove(size_t i) {" << endl;
-        if (hasPK) {
-            out << "            const auto key = row(i).key();" << endl;
-            out << "            pk.erase(key);" << endl;
-
-        }
-        //out << "            table[i] = row(table.size()-1);" << endl;
-        out << "            std::iter_swap(table.begin() +i, table.end()-1);\n";
-        out << "            table.pop_back();" << endl;
-        if (hasPK) {
-            out << "            pk[table[i].key()] = i;" << endl;
-        }
-        out << "        }" << endl;
-
-        //Inserting
-        out << "        void insert(const Row& element) { " << endl;
-        out << "            table.push_back(element); " << endl;
-        if (hasPK) {
-            out << "            pk[element.key()] = table.size() - 1;" << endl;
-        }
-        out << "        }" << endl;
-        if (hasPK) {
-            out << "        void buildIndex() {" << endl;
-            out << "            size_t size = table.size();" << endl;
-            out << "            pk.reserve(size);" << endl;
-            out << "            for (size_t i = 0; i < size; i++) {" << endl;
-            out << "                pk[table[i].key()] = i;" << endl;
-            out << "            }" << endl;
-            out << "        }" << endl;
-        }
-
-        //End the schema struct
-        out << "    };" << endl;
+        genRelation(out, rel);
     }
 
     out << "public: " << endl;
     out << "    Database(const Database&) = delete;\n"
-            "    Database () {}" << endl;
+        << "    Database () {}" << endl;
+
+    //Output all relations as members
     for (const Schema::Relation& rel : relations) {
-        out << "    " << rel.getTypeRelationName() << " " << rel.name << ";" << endl;
+        out << "\t";
+        out << rel.getTypeRelationName() << " " << rel.name << ";" << endl;
     }
 
-    //Import: import any data into our database
+    // Import any data into our database
     out << "    void import(const std::string &path) {" << endl;
     for (const Schema::Relation& rel : relations) {
-        out << "       DatabaseTools::loadTableFromFile(" << rel.name << ", path + \"tpcc_" << rel.name << ".tbl\");\n" << endl;
-        out << "       std::cout << \"\\t" << rel.getTypeRelationName() << ": \" << " << rel.name << ".size() << std::endl;" << endl;
+        out << "       DatabaseTools::loadTableFromFile(";
+        out << rel.name << ", path + \"tpcc_" << rel.name << ".tbl\");\n" << endl;
+        out << "       std::cout << \"\\t";
+        out << rel.getTypeRelationName() << ": \" << " << rel.name << ".size() << std::endl;" << endl;
     }
-    out << "    }" << endl; // End import()
+    out << "    }" << endl;
 
-    out << "};" << endl; // End struct Database
+    // End struct Database
+    out << "};" << endl;
 
-    //Allow db to be loaded dynamically
+    // Allow db to be loaded dynamically
     out << "extern \"C\" Database* make_database(std::string filename) {\n"
             "    Database* db = new Database();\n"
             "    db->import(filename);\n"
@@ -249,6 +264,7 @@ Schema::Relation& Schema::findRelation(const string& name) {
     }
     throw ParserError(0, "No such table: '" + name + "'");
 }
+
 
 int Schema::Relation::findAttributeIndex(const string& name) {
     int i = 0;

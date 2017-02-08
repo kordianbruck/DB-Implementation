@@ -33,14 +33,14 @@ struct Schema {
             //Is this attribute part of the PK?
             bool isPartPK;
 
-            Attribute() : len1(0), len2(0), notNull(true), generated(false), generatedStart(false), generatedEnd(false), isPartPK(false) {}
+            Attribute() : len1(0), len2(0), notNull(true), generated(false), generatedStart(false), generatedEnd(false), isPartPK(false) { }
         };
 
         struct Index {
             std::string name;
             std::vector<unsigned> keys;
 
-            Index(const std::string& name) : name(name) {}
+            Index(const std::string& name) : name(name) { }
         };
 
         std::string name;
@@ -55,15 +55,16 @@ struct Schema {
 
         Schema::Relation::Attribute& findAttribute(const std::string& name);
 
-        Relation(const std::string& name) : name(name) {}
+        Relation(const std::string& name) : name(name) { }
 
         string getTypeRelationName() const {
             string ret = name;
             if (!ret.empty()) {
                 ret[0] = (char) std::toupper(ret[0]);
 
-                for (std::size_t i = 1; i < name.length(); ++i)
+                for (std::size_t i = 1; i < name.length(); ++i) {
                     ret[i] = (char) std::tolower(ret[i]);
+                }
             }
             return ret;
         }
@@ -75,9 +76,15 @@ struct Schema {
 
     std::string generateDatabaseCode() const;
 
+    void genIncludes(ostream& out) const;
+    void genRelation(ostream& out, const Schema::Relation&) const;
+    void genRowDef(ostream& out, const Schema::Relation&, bool) const;
+
     Schema::Relation& findRelation(const std::string& name);
 
     static string type(const Relation::Attribute& attr, bool cpp = 0);
+
+    ostream& genIncludes();
 };
 
 
