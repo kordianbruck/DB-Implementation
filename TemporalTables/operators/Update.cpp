@@ -2,7 +2,7 @@
 #include "Update.h"
 
 
-Update::Update(Operator& input, vector<fieldType>& fields) : input(input), outVars(fields) {
+Update::Update(Operator& input, vector<fieldType>& fields, Schema::Relation rel) : input(input), outVars(fields), relation(rel) {
     input.setConsumer(this);
     for (auto& e : outVars) {
         this->required.insert(e.first);
@@ -16,9 +16,18 @@ string Update::produce() {
 
 string Update::consume(Operator& op) {
     stringstream out;
+    /*
+        Row e = r;
+        w_name = e.w_name.castString("abc", 3);
+        db->warehouse.update(e);
+     */
+
+    out << "auto e = r;" << endl;
     for (auto& e: outVars) {
-        out << e.first->attr->name << " = r." << e.first->attr->name << ".castString(\"" << e.second << "\", " << e.second.size() << ");";
+        out << "e.";
+        out << e.first->attr->name << " = e." << e.first->attr->name << ".castString(\"" << e.second << "\", " << e.second.size() << ");";
     }
+    out << "db->" << relation.name << ".update(e);" << endl;
     return out.str();
 }
 

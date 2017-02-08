@@ -11,12 +11,15 @@ using fieldType = pair<IU*, string>;
 class Update : Operator {
     Operator& input;
     vector<fieldType>& outVars;
+    Schema::Relation relation;
+
 public:
-    Update(Operator&, vector<fieldType>&);
+    Update(Operator&, vector<fieldType>&, Schema::Relation);
 
     string produce() override;
 
     string consume(Operator&) override;
+
 };
 
 

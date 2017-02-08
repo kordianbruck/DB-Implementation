@@ -37,7 +37,12 @@ string QueryInsert::generateQueryCode() {
         } else if (field.type == Types::Tag::Date) {
             out << "r." << field.name << " = r." << field.name << ".castString(\"0000-01-01\", 10);" << endl;
         } else if (field.type == Types::Tag::Datetime) {
-            out << "r." << field.name << " = r." << field.name << ".castString(\"0000-01-01\", 10);" << endl;
+            out << "r." << field.name << " = ";
+            if(field.generatedStart) {
+                out << "Timestamp::now();";
+            } else {
+                out << "Timestamp::null();";
+            }
         }
     }
     out << "} catch (const char * r) { cout << r << endl; }";

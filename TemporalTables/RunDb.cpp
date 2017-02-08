@@ -2,7 +2,7 @@
 #include <iostream>
 #include <dirent.h>
 #include "utils/DatabaseTools.h"
-#include "tmp/db.cpp"
+#include "db_tempo.cpp"
 //#include "tmp/query_910dd58f34f7307fb5634b01dfde16ea.cpp"
 
 int main(int argc, char** argv) {

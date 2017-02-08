@@ -2,16 +2,24 @@
 #include <iostream>
 #include <boost/algorithm/string/predicate.hpp>
 #include "utils/DatabaseTools.h"
+#include <signal.h>
 
 string testQueries[] = {
-        "Select * from warehouse",
-        "explain Select * from warehouse",
-        "Select * from warehouse where w_id=1",
-        "explain Select * from warehouse where w_id=1",
-        "update warehouse set w_name = 'abc' where w_id=4",
-        "delete from warehouse where w_id=5",
-        "INSERT INTO warehouse (w_id) VALUES (6)"
+        "Select * from warehouse", //0
+        "Select * from warehouse where w_id=1", //1
+        "Select * from warehouse FOR SYSTEM_TIME AS OF '2017-02-05 12:00:00'", //2
+        "explain Select * from warehouse where w_id=1",//3
+        "update warehouse set w_name = 'abc' where w_id=4",//4
+        "delete from warehouse where w_id=4",//5
+        "INSERT INTO warehouse (w_id) VALUES (6)",//6
+        "Select * from warehouse FOR SYSTEM_TIME AS OF '2017-02-08 11:22:42' WHERE w_id=1",//7
 };
+
+void my_handler(sig_t s) {
+    printf("Caught signal %d\n", s);
+    exit(1);
+
+}
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -19,7 +27,7 @@ int main(int argc, char** argv) {
     }
 
     //Delete old queries
-    system("exec rm -r ./tmp/*");
+    //system("exec rm -r ./tmp/*");
 
     //Output a nice header
     cout << "TPC-C Compile" << endl;

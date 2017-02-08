@@ -29,7 +29,7 @@ protected:
 
     selectionType getSelections(Operator* op) {
         selectionType conditions;
-        auto operatorIUs = op->getProduced();
+        auto& operatorIUs = op->getProduced();
 
         //Iterate through all selections
         for (auto& s : selection) {

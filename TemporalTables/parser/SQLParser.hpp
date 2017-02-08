@@ -22,6 +22,7 @@ private:
     void parseSelect(QuerySelect*);
 
     void parseFrom(QuerySelect*);
+    void parseFor(QuerySelect*);
 
     void parseWhere(Query*);
 

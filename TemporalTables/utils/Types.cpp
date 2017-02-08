@@ -49,7 +49,7 @@ Integer Integer::castString(const char* str, uint32_t strLen)
         } else if (c == '.') {
             break;
         } else {
-            throw "invalid number format: invalid character in integer string";
+            throw "invalid number format: invalid character in integer string: " + c;
         }
     }
 
@@ -177,7 +177,40 @@ Date Date::castString(const char* str, uint32_t strLen)
 
 //---------------------------------------------------------------------------
 Timestamp Timestamp::castString(const char* str, uint32_t strLen) { // Cast a string to a timestamp value
-    return Timestamp(Integer::castString(str, strLen).value);
+    //Maybe we got an int?
+    if (strLen < 10 || str[4] != '-' || str[7] != '-') {
+        Timestamp ret(Integer::castString(str, strLen).value);
+        return ret;
+    }
+
+    //Otherwise assume we have at least a date 2017-01-01
+    uint64_t ret = 0;
+    ret += Date::castString(str, 10).value * msPerDay;
+
+    //Check for time portion: 2017-01-01 HH:MM:SS.MS
+    unsigned hour = 0, minute = 0, second = 0, microsecond = 0, zero = '0';
+    if (strLen >= 16 && str[13] == ':') {
+        hour = 10 * (str[11] - zero) + str[12] - zero;
+        minute = 10 * (str[14] - zero) + str[15] - zero;
+        if (hour < 0 || hour > 23 || minute < 0 || minute > 59) {
+            throw "invalid hour/minute time format @1";
+        }
+    }
+    if (strLen >= 19 && str[16] == ':') {
+        second = 10 * (str[17] - zero) + str[18] - zero;
+        if (second < 0 || second > 59) {
+            throw "invalid second time format @1";
+        }
+    }
+    if (strLen >= 23 && str[19] == '.') {
+        microsecond = 100 * (str[20] - zero) + 10 * (str[21] - zero) + str[22] - zero;
+        if (microsecond < 0 || microsecond > 1000) {
+            throw "invalid microsecond time format @1";
+        }
+    }
+
+    ret += mergeTime(hour, minute, second, microsecond);
+    return ret;
 }
 
 //---------------------------------------------------------------------------

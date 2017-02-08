@@ -39,12 +39,14 @@ string QuerySelect::generateQueryCode() {
     stack<Operator*> ops;
     for (auto r : relations) {
         //for (auto i = relations.size(); i > 0; i--) {
-        auto ts = new TableScan(schema->findRelation(r));
+        auto& relationSchema = schema->findRelation(r);
+        auto ts = new TableScan(relationSchema);
         auto selectionConditions = getSelections(ts);
 
         //If we got matching selections, why not directly add them with a selection
-        if (selectionConditions.size() > 0) {
-            ops.push(new Selection(shared_ptr<TableScan>(ts), selectionConditions));
+        //If table is under versioning we want to only show most current elements
+        if (selectionConditions.size() > 0 || relationSchema.systemVersioning) {
+            ops.push(new Selection(shared_ptr<TableScan>(ts), selectionConditions, sysTimeStart, sysTimeEnd));
         } else {
             ops.push(ts);
         }
@@ -91,7 +93,6 @@ string QuerySelect::generateQueryCode() {
             }
         }
     }
-
 
     //Create a printer that will output our projections
     Print result = Print(*ops.top(), projections);

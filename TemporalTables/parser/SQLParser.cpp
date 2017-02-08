@@ -53,7 +53,7 @@ void SQLParser::parseFrom(QuerySelect* query) {
     bool isRelationParsed = false;
     while (true) {
         token = lexer.getNext();
-        if (lexer.isKeyword("where")) {
+        if (lexer.isKeyword("where") || lexer.isKeyword("for")) {
             lexer.unget(token);
             break;
         }
@@ -74,6 +74,37 @@ void SQLParser::parseFrom(QuerySelect* query) {
             throw ParserException("Unexpected token in the FROM clause");
         }
     }
+}
+
+void SQLParser::parseFor(QuerySelect* query) {
+    SQLLexer::Token token = lexer.getNext();
+    //We don't have a for part
+    if (token != SQLLexer::Identifier || !lexer.isKeyword("for")) {
+        lexer.unget(token);
+        return;
+    }
+
+    token = lexer.getNext();
+    if (token != SQLLexer::Identifier || !lexer.isKeyword("SYSTEM_TIME")) {
+        throw ParserException("Expected 'SYSTEM_TIME' in FOR clause");
+    }
+
+    token = lexer.getNext();
+    if (token != SQLLexer::Identifier || !lexer.isKeyword("AS")) {
+        throw ParserException("Expected 'AS' in FOR clause");
+    }
+
+    token = lexer.getNext();
+    if (token != SQLLexer::Identifier || !lexer.isKeyword("OF")) {
+        throw ParserException("Expected 'OF' in FOR clause");
+    }
+
+    token = lexer.getNext();
+    if(token != SQLLexer::String) {
+        throw ParserException("Expected timestamp in FOR clause");
+    }
+    string date = lexer.getTokenValue();
+    query->sysTimeStart = Timestamp::castString(date.c_str(), (uint32_t) date.length());
 }
 
 /// Warning: only handles expressions of a form attr1=attr2, or attr = constant
@@ -290,6 +321,7 @@ Query* SQLParser::parse(Schema* schema) {
 
         parseSelect((QuerySelect*) query);
         parseFrom((QuerySelect*) query);
+        parseFor((QuerySelect*) query);
         parseWhere(query);
     } else if (lexer.isKeyword("update")) {
         //UPDATE table_name SET column1=value1,column2=value2,... WHERE some_column=some_value;
@@ -343,6 +375,5 @@ Query* SQLParser::parse(Schema* schema) {
 
     return query;
 }
-
 
 

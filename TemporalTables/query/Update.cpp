@@ -38,7 +38,8 @@ string QueryUpdate::generateQueryCode() {
     ostringstream out;
 
     Operator* finder;
-    auto ts = new TableScan(schema->findRelation(relation));
+    auto rel = schema->findRelation(relation);
+    auto ts = new TableScan(rel);
     auto selectionConditions = getSelections(ts);
 
     if (selectionConditions.size() > 0) {
@@ -47,7 +48,7 @@ string QueryUpdate::generateQueryCode() {
         finder = ts;
     }
     vector<fieldType> fields = getFields(finder);
-    Update* u = new Update(*finder, fields);
+    Update* u = new Update(*finder, fields, rel);
     out << u->produce();
 
     delete u;
