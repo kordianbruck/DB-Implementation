@@ -8,9 +8,9 @@
 #include <tuple>
 #include <map>
 #include <sstream>
-#include "../utils/Types.hpp"
-#include "../utils/DatabaseTools.h"
-#include "../utils/TupelHash.h"
+#include "utils/Types.hpp"
+#include "utils/DatabaseTools.h"
+#include "utils/TupelHash.h"
 
 struct Database {
     struct Warehouse {

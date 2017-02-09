@@ -27,6 +27,9 @@ int main(int argc, char** argv) {
         return 1;
     }
 
+    string date = "2017-02-01 12:00:00";
+    cout << Timestamp::castString(date.c_str(), date.length()).value << endl;
+
     //query(db);
 
     //Turn off warnings caused by generated Database code, that is not available at compile time

@@ -27,6 +27,9 @@ vector<fieldType> QueryUpdate::getFields(Operator* sel) {
     for (auto& condition : fields) {
         for (auto iu : sel->getProduced()) {
             if (iu->attr->name == condition.first) {
+                if (iu->attr->generated) {
+                    throw "Cannot update generated column!!";
+                }
                 conditions.push_back(make_pair(iu, condition.second));
             }
         }

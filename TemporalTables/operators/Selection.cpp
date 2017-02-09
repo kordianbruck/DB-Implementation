@@ -48,7 +48,8 @@ string Selection::consume(Operator& op) {
         } else if (sysTimeStart == Timestamp::null() && sysTimeEnd != Timestamp::null()) {
             throw "Missing start timestamp for ranged query";
         } else if (sysTimeStart != Timestamp::null() && sysTimeEnd != Timestamp::null()) {
-            out << sysTimeStartIU->attr->name << ".value >= " << sysTimeStart.value << " || ";
+            cout << sysTimeStart.value << " " << sysTimeEnd.value << endl;
+            out << sysTimeStartIU->attr->name << ".value >= " << sysTimeStart.value << " && ";
             out << sysTimeEndIU->attr->name << ".value <= " << sysTimeEnd.value;
         } else { //No ts passed: only show "current" view of the db
             out << sysTimeStartIU->attr->name << ".value <= Timestamp::now().value && ";

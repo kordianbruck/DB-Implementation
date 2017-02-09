@@ -78,33 +78,50 @@ void SQLParser::parseFrom(QuerySelect* query) {
 
 void SQLParser::parseFor(QuerySelect* query) {
     SQLLexer::Token token = lexer.getNext();
-    //We don't have a for part
+    //If we don't have a FOR part, then return
     if (token != SQLLexer::Identifier || !lexer.isKeyword("for")) {
         lexer.unget(token);
         return;
     }
 
-    token = lexer.getNext();
-    if (token != SQLLexer::Identifier || !lexer.isKeyword("SYSTEM_TIME")) {
+    //We only support system time currently
+    if (lexer.getNext() != SQLLexer::Identifier || !lexer.isKeyword("system_time")) {
         throw ParserException("Expected 'SYSTEM_TIME' in FOR clause");
     }
 
     token = lexer.getNext();
-    if (token != SQLLexer::Identifier || !lexer.isKeyword("AS")) {
-        throw ParserException("Expected 'AS' in FOR clause");
-    }
+    //We can have either one timestamp or a BETWEEN with two timestamps
+    if (token == SQLLexer::Identifier && lexer.isKeyword("AS")) {
+        if (lexer.getNext() != SQLLexer::Identifier || !lexer.isKeyword("OF")) {
+            throw ParserException("Expected 'OF' in FOR clause");
+        }
 
-    token = lexer.getNext();
-    if (token != SQLLexer::Identifier || !lexer.isKeyword("OF")) {
-        throw ParserException("Expected 'OF' in FOR clause");
-    }
+        if (lexer.getNext() != SQLLexer::String) {
+            throw ParserException("Expected timestamp in FOR clause");
+        }
+        string date = lexer.getTokenValue();
+        query->sysTimeStart = Timestamp::castString(date.c_str(), (uint32_t) date.length());
 
-    token = lexer.getNext();
-    if(token != SQLLexer::String) {
-        throw ParserException("Expected timestamp in FOR clause");
+    } else if (token == SQLLexer::Identifier && lexer.isKeyword("between")) {
+        if (lexer.getNext() != SQLLexer::String) {
+            throw ParserException("Expected timestamp in FOR clause");
+        }
+        string date = lexer.getTokenValue();
+        query->sysTimeStart = Timestamp::castString(date.c_str(), (uint32_t) date.length());
+
+        if (lexer.getNext() != SQLLexer::Identifier || !lexer.isKeyword("and")) {
+            throw ParserException("Expected timestamp in FOR clause");
+        }
+
+        if (lexer.getNext() != SQLLexer::String) {
+            throw ParserException("Expected timestamp in FOR clause");
+        }
+        date = lexer.getTokenValue();
+        query->sysTimeEnd = Timestamp::castString(date.c_str(), (uint32_t) date.length());
+
+    } else {
+        throw ParserException("Expected 'AS' OR 'BETWEEN' in FOR clause");
     }
-    string date = lexer.getTokenValue();
-    query->sysTimeStart = Timestamp::castString(date.c_str(), (uint32_t) date.length());
 }
 
 /// Warning: only handles expressions of a form attr1=attr2, or attr = constant
