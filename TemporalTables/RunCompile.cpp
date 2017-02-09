@@ -1,4 +1,4 @@
-
+#include <iomanip>
 #include <iostream>
 #include <boost/algorithm/string/predicate.hpp>
 #include "utils/DatabaseTools.h"
@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
     //Output some Info & Enable input
     cout << "Enter a sql query, 'show queries', 'run <query>', 'show performance', 'show schema' or 'exit' to quit: " << endl;
     string line;
+    long timeCompile = 0, timeExecute = 0;
     do {
         //Do we want to exit?
         if (line == "exit") {
@@ -77,12 +78,13 @@ int main(int argc, char** argv) {
         } else if (line != "") { //Actually proccess queries
             try {
                 string file = DatabaseTools::parseAndWriteQuery(line, schema);
-                if (DatabaseTools::compileFile(file + ".cpp", file + ".so") == 0) {
-                    //cerr << "\tCompiled into: " << file << ". running... " << endl;
-                    DatabaseTools::loadAndRunQuery(file + ".so", db);
+                timeCompile = DatabaseTools::compileFile(file + ".cpp", file + ".so");
+                if (timeCompile >= 0) {
+                    timeExecute = DatabaseTools::loadAndRunQuery(file + ".so", db);
                 } else {
                     cerr << "\tCompilation failed..." << endl;
                 }
+                cout << "\033[34mCompile: " << timeCompile << "ms / Execute: " << timeExecute << "us \033[0m" << endl;
             } catch (ParserError& e) {
                 cerr << e.what() << " on line " << e.where() << endl;
             } catch (SQLParser::ParserException& e) {

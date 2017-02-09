@@ -36,11 +36,11 @@ struct DatabaseTools {
 
     static void split(const std::string& str, std::vector<std::string>& lineChunks);
 
-    static int compileFile(const string& name, const string& outname);
+    static long compileFile(const string& name, const string& outname);
 
     static Database* loadAndRunDb(string filename);
 
-    static void loadAndRunQuery(string filename, Database* db);
+    static long loadAndRunQuery(string filename, Database* db);
 
     static Schema* parseAndWriteSchema(const string& schemaFile);
 

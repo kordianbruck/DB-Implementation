@@ -6,8 +6,8 @@ const string DatabaseTools::dbName = "db.cpp";
 const string DatabaseTools::dbNameCompiled = "db.so";
 const string DatabaseTools::folderTmp = "tmp/";
 const string DatabaseTools::folderTable = "./tblTemporal/";
-//Debug symbols: -g / Additional: -flto  -pipe
-const char* DatabaseTools::cmdBuild{"g++ -O3 -std=c++14 -fPIC -flto -ggdb3 -O0 -DDEBUG -pipe %s -shared -o %s\0"};
+//Debug symbols: -g  -O0 -DDEBUG -ggdb3 / Additional: -flto  -pipe
+const char* DatabaseTools::cmdBuild{"g++ -O3 -std=c++14 -fPIC -flto -pipe %s -shared -o %s\0"};
 
 
 void DatabaseTools::split(const std::string& str, std::vector<std::string>& lineChunks) {
@@ -19,17 +19,31 @@ void DatabaseTools::split(const std::string& str, std::vector<std::string>& line
     }
 }
 
-int DatabaseTools::compileFile(const string& name, const string& outname) {
+long DatabaseTools::compileFile(const string& name, const string& outname) {
+    using namespace std::chrono;
+
+    //Start the clock
+    high_resolution_clock::time_point start = high_resolution_clock::now();
+
+    //Cache queries on disk
     ifstream f(folderTmp + outname);
     if (f.good() && outname != dbNameCompiled) { // Only compile if not already on disk
         return 0;
     }
 
+    //Build the command by replacing the anchors / placeholders with the correct values
     char* command = new char[strlen(cmdBuild) + 2 * folderTmp.size() + name.size() + outname.size() + 5];
     sprintf(command, cmdBuild, (folderTmp + name).c_str(), (folderTmp + outname).c_str());
     int ret = system(command);
     delete[] command;
-    return ret;
+
+    //If compilation failed
+    if(ret != 0) {
+        return -1;
+    }
+
+    //Stop an return the execution time
+    return duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
 }
 
 Database* DatabaseTools::loadAndRunDb(string filename) {
@@ -55,24 +69,37 @@ Database* DatabaseTools::loadAndRunDb(string filename) {
 }
 
 
-void DatabaseTools::loadAndRunQuery(string filename, Database* db) {
+long DatabaseTools::loadAndRunQuery(string filename, Database* db) {
+    using namespace std::chrono;
+
+    //Start the clock
+    high_resolution_clock::time_point start = high_resolution_clock::now();
+
+    //Load up the dynamic lib
     void* handle = dlopen((folderTmp + filename).c_str(), RTLD_NOW);
     if (!handle) {
         cerr << "error loading .so: " << dlerror() << endl;
-        return;
+        return 0;
     }
 
+    //Get the function pointer
     auto query = reinterpret_cast<void (*)(Database*)>(dlsym(handle, "query"));
     if (!query) {
         cerr << "error: " << dlerror() << endl;
-        return;
+        return 0;
     }
+
+    //Execute
     query(db);
 
+    //Unload
     if (dlclose(handle)) {
         cerr << "error: " << dlerror() << endl;
-        return;
+        return 0;
     }
+
+    //Stop an return the execution time
+    return duration_cast<microseconds>(high_resolution_clock::now() - start).count();
 }
 
 Schema* DatabaseTools::parseAndWriteSchema(const string& schemaFile) {

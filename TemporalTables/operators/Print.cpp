@@ -45,7 +45,7 @@ int getColumnWidth(Schema::Relation::Attribute* a) {
 
 string Print::produce() {
     stringstream out;
-    out << "std::cout << setfill(' ') << ";
+    out << "std::cout << \"\033[1;32m\"<< setfill(' ') << ";
     for (auto& e: outVars) {
         out << "setw(" << getColumnWidth(e->attr) << ") << left << " << endl;
         out << "\"" << e->attr->name << "\"";
@@ -53,7 +53,7 @@ string Print::produce() {
             out << " << ";
         }
     }
-    out << " << std::endl;\n";
+    out << "<< \"\033[0m\" << std::endl;\n";
     out << input.produce();
     return out.str();
 }
