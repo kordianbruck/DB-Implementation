@@ -144,6 +144,13 @@ void Schema::genRowDef(ostream& out, const Schema::Relation& rel, bool hasPK) co
 
 void Schema::genRelation(ostream& out, const Schema::Relation& rel) const {
     bool hasPK = rel.primaryKey.size() > 0;
+    string sysTimeColStart = "";
+    string sysTimeColEnd = "";
+    if (rel.systemVersioning) {
+        sysTimeColStart = rel.attributes[rel.systemVersioningPeriod.first].name;
+        sysTimeColEnd = rel.attributes[rel.systemVersioningPeriod.second].name;
+    }
+
     out << "    struct " << rel.getTypeRelationName() << "{" << endl;
 
     //Output the primary key type
@@ -158,6 +165,9 @@ void Schema::genRelation(ostream& out, const Schema::Relation& rel) const {
     if (hasPK) {
         out << "        std::unordered_map<pkType, u_int32_t> pk{};" << endl;
     }
+    if (rel.systemVersioning) {
+        out << "        std::multimap<pkType, u_int32_t> pkHistory{};" << endl;
+    }
     /*if (rel.indexes.size() > 0) {
         for (auto& e : rel.indexes) {
             out << "        //TODO ADD INDEXES" << endl;
@@ -171,29 +181,55 @@ void Schema::genRelation(ostream& out, const Schema::Relation& rel) const {
     }
     out << "        Row& row(size_t i) { return table[i]; }" << endl;
 
-    if (hasPK) { //Don't allow updating rows, if the table does not have a PK
+    if (rel.systemVersioning) {
+        out << "    void update(Row& element) {" << endl;
+        //Move previous element to history pk
+        out << "        auto& currIdx = pk[element.key()];" << endl;
+
+        //Expire the current entry (update)
+        out << "        table[currIdx].";
+        out << sysTimeColEnd << " = Timestamp::now();" << endl;
+
+        //Insert the new element
+        out << "        element."
+            << sysTimeColStart << " = Timestamp::now();" << endl
+            << "        insert(element);" << endl
+            << "    }" << endl;
+    } else if (hasPK) { //Don't allow updating rows, if the table does not have a PK
         out << "        void update(Row& element) { table[pk[element.key()]] = element; }" << endl;
     }
 
     //Removing elements
     out << "        void remove(size_t i) {" << endl;
-    if (hasPK) {
-        out << "            const auto key = row(i).key();" << endl;
-        out << "            pk.erase(key);" << endl;
-
-    }
-    out << "            std::iter_swap(table.begin() +i, table.end()-1);\n";
-    out << "            table.pop_back();" << endl;
-    if (hasPK) {
-        out << "            pk[table[i].key()] = i;" << endl;
+    if (rel.systemVersioning) {
+        out << "auto& r = row(i);" << endl;
+        out << "r." << sysTimeColEnd << " = Timestamp::now();" << endl;//set the deletion time
+        out << "pk.erase(r.key()); " << endl;//Remove from "current" pk
+        //Entry already should be in history table through correct insert
+    } else {
+        if (hasPK) {
+            out << "            const auto key = row(i).key();" << endl;
+            out << "            pk.erase(key);" << endl;
+        }
+        out << "            std::iter_swap(table.begin() +i, table.end()-1);\n";
+        out << "            table.pop_back();" << endl;
+        if (hasPK) {
+            out << "            pk[table[i].key()] = i;" << endl;
+        }
     }
     out << "        }" << endl;
 
     //Inserting
-    out << "        void insert(const Row& element) { " << endl;
+    out << "        void insert(Row& element) { " << endl;
+    if (rel.systemVersioning) {
+        out << "if (element." << sysTimeColStart << " == Timestamp::null()) {element." << sysTimeColStart << " = Timestamp::now();}" << endl;
+    }
     out << "            table.push_back(element); " << endl;
     if (hasPK) {
         out << "            pk[element.key()] = table.size() - 1;" << endl;
+    }
+    if (rel.systemVersioning) {
+        out << "pkHistory.insert(make_pair(element.key(), table.size() - 1));" << endl;
     }
     out << "        }" << endl;
 

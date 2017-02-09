@@ -83,10 +83,10 @@ Schema* DatabaseTools::parseAndWriteSchema(const string& schemaFile) {
         cout << "Loaded " << schema->relations.size() << " relations into our schema." << endl;
 
         //Write to file the database
-        /*ofstream myfile;
+        ofstream myfile;
         myfile.open(folderTmp + dbName);
         myfile << schema->generateDatabaseCode();
-        myfile.close();*/
+        myfile.close();
 
         compileFile(dbName, dbNameCompiled);
     } catch (ParserError& e) {
