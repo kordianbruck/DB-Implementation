@@ -5,7 +5,7 @@
 const string DatabaseTools::dbName = "db.cpp";
 const string DatabaseTools::dbNameCompiled = "db.so";
 const string DatabaseTools::folderTmp = "tmp/";
-const string DatabaseTools::folderTable = "../tbl/";
+const string DatabaseTools::folderTable = "./tblTemporal/";
 //Debug symbols: -g / Additional: -flto  -pipe
 const char* DatabaseTools::cmdBuild{"g++ -O3 -std=c++14 -fPIC -flto -ggdb3 -O0 -DDEBUG -pipe %s -shared -o %s\0"};
 

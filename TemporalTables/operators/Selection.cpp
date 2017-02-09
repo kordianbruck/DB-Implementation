@@ -48,9 +48,15 @@ string Selection::consume(Operator& op) {
         } else if (sysTimeStart == Timestamp::null() && sysTimeEnd != Timestamp::null()) {
             throw "Missing start timestamp for ranged query";
         } else if (sysTimeStart != Timestamp::null() && sysTimeEnd != Timestamp::null()) {
-            cout << sysTimeStart.value << " " << sysTimeEnd.value << endl;
-            out << sysTimeStartIU->attr->name << ".value >= " << sysTimeStart.value << " && ";
-            out << sysTimeEndIU->attr->name << ".value <= " << sysTimeEnd.value;
+            //So asking if a date is in a range is not so trivial task and would take 8 compares
+            //Its easier to ask if the date is not in the range wich will result in 2 compares
+            //We also need to check if it is a "current" row with a null end date
+            out << "!(";
+            out << sysTimeEndIU->attr->name << ".value < " << sysTimeStart.value << " || ";
+            out << sysTimeStartIU->attr->name << ".value > " << sysTimeEnd.value;
+            out << ") || (";
+            out << sysTimeStartIU->attr->name << ".value < " << sysTimeEnd.value
+                << " && " << sysTimeEndIU->attr->name << ".value == 0)";
         } else { //No ts passed: only show "current" view of the db
             out << sysTimeStartIU->attr->name << ".value <= Timestamp::now().value && ";
             out << sysTimeEndIU->attr->name << ".value == 0 ";
