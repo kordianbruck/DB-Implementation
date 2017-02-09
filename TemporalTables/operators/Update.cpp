@@ -23,9 +23,18 @@ string Update::consume(Operator& op) {
      */
 
     out << "auto e = r;" << endl;
+    int currentVar = 0;
     for (auto& e: outVars) {
         out << "e.";
-        out << e.first->attr->name << " = e." << e.first->attr->name << ".castString(\"" << e.second << "\", " << e.second.size() << ");";
+        out << e.first->attr->name << " = e." << e.first->attr->name << ".castString(";
+        if (e.second == "?") {
+            out << "params[" << currentVar << "].c_str(), " << "params[" << currentVar << "].size()";
+            currentVar++;
+        } else {
+            out << "\"" << e.second << "\", " << e.second.size();
+        }
+        out << ");";
+
     }
     out << "db->" << relation.name << ".update(e);" << endl;
     return out.str();

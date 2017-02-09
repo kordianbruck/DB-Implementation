@@ -38,12 +38,9 @@ string Delete::produce() {
                     if (selection.first->attr->name == rel.attributes[pkAttrKey].name) {
                         if (selection.first->attr->type == Types::Tag::Integer) {
                             keyTuple << selection.second;
-                        } else if (selection.first->attr->type == Types::Tag::Integer) {
-                            keyTuple << "\"" << selection.second << "\"";
                         } else {
                             throw ParserError(0, "Type in key not supported in deletes");
                         }
-
                     }
                 }
 

@@ -26,6 +26,7 @@ class Query {
 protected:
     vector<conditionType> selection;
     vector<conditionType> joinConditions;
+    int questionMarksReserved = 0;
 
     selectionType getSelections(Operator* op) {
         selectionType conditions;

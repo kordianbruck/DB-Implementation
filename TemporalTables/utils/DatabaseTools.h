@@ -36,17 +36,17 @@ struct DatabaseTools {
 
     static void split(const std::string& str, std::vector<std::string>& lineChunks);
 
-    static long compileFile(const string& name, const string& outname);
+    static long compileFile(const string name);
 
     static Database* loadAndRunDb(string filename);
 
-    static long loadAndRunQuery(string filename, Database* db);
+    static long loadAndRunQuery(string filename, Database* db, vector<string>&);
 
     static Schema* parseAndWriteSchema(const string& schemaFile);
 
     static string parseAndWriteQuery(const string& query, Schema* s);
 
-    static void performanceTest( Schema* s);
+    static void performanceTest(Schema* s, Database*);
 
     template<typename T>
     static void loadTableFromFile(T& tbl, const std::string& file) {

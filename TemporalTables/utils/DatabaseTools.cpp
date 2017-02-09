@@ -2,8 +2,7 @@
 #include "DatabaseTools.h"
 
 
-const string DatabaseTools::dbName = "db.cpp";
-const string DatabaseTools::dbNameCompiled = "db.so";
+const string DatabaseTools::dbName = "db";
 const string DatabaseTools::folderTmp = "tmp/";
 const string DatabaseTools::folderTable = "./tblTemporal/";
 //Debug symbols: -g  -O0 -DDEBUG -ggdb3 / Additional: -flto  -pipe
@@ -19,26 +18,30 @@ void DatabaseTools::split(const std::string& str, std::vector<std::string>& line
     }
 }
 
-long DatabaseTools::compileFile(const string& name, const string& outname) {
+long DatabaseTools::compileFile(const string name) {
     using namespace std::chrono;
 
     //Start the clock
     high_resolution_clock::time_point start = high_resolution_clock::now();
 
+    //Assemble file names
+    string fileIn = folderTmp + name + ".cpp";
+    string fileOut = folderTmp + name + ".so";
+
     //Cache queries on disk
-    ifstream f(folderTmp + outname);
-    if (f.good() && outname != dbNameCompiled) { // Only compile if not already on disk
-        return 0;
+    ifstream f(fileOut);
+    if (f.good() && name != dbName) { // Only compile if not already on disk
+        return duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
     }
 
     //Build the command by replacing the anchors / placeholders with the correct values
-    char* command = new char[strlen(cmdBuild) + 2 * folderTmp.size() + name.size() + outname.size() + 5];
-    sprintf(command, cmdBuild, (folderTmp + name).c_str(), (folderTmp + outname).c_str());
+    char* command = new char[strlen(cmdBuild) + fileIn.size() + fileOut.size() + 5];
+    sprintf(command, cmdBuild, fileIn.c_str(), fileOut.c_str());
     int ret = system(command);
     delete[] command;
 
     //If compilation failed
-    if(ret != 0) {
+    if (ret != 0) {
         return -1;
     }
 
@@ -69,28 +72,30 @@ Database* DatabaseTools::loadAndRunDb(string filename) {
 }
 
 
-long DatabaseTools::loadAndRunQuery(string filename, Database* db) {
+long DatabaseTools::loadAndRunQuery(string filename, Database* db, vector<string>& tmp) {
     using namespace std::chrono;
+
+    string filenameExt = folderTmp + filename + ".so";
 
     //Start the clock
     high_resolution_clock::time_point start = high_resolution_clock::now();
 
     //Load up the dynamic lib
-    void* handle = dlopen((folderTmp + filename).c_str(), RTLD_NOW);
+    void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
     if (!handle) {
-        cerr << "error loading .so: " << dlerror() << endl;
+        cerr << "error loading " << filenameExt << ": " << dlerror() << endl;
         return 0;
     }
 
     //Get the function pointer
-    auto query = reinterpret_cast<void (*)(Database*)>(dlsym(handle, "query"));
+    auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
     if (!query) {
         cerr << "error: " << dlerror() << endl;
         return 0;
     }
 
     //Execute
-    query(db);
+    query(db, tmp);
 
     //Unload
     if (dlclose(handle)) {
@@ -111,11 +116,11 @@ Schema* DatabaseTools::parseAndWriteSchema(const string& schemaFile) {
 
         //Write to file the database
         ofstream myfile;
-        myfile.open(folderTmp + dbName);
+        myfile.open(folderTmp + dbName + ".cpp");
         myfile << schema->generateDatabaseCode();
         myfile.close();
 
-        compileFile(dbName, dbNameCompiled);
+        compileFile(dbName);
     } catch (ParserError& e) {
         cerr << e.what() << " on line " << e.where() << endl;
     } catch (char const* msg) {
@@ -151,7 +156,7 @@ string DatabaseTools::parseAndWriteQuery(const string& query, Schema* s) {
     myfile << "/* ";
     myfile << qu->toString();
     myfile << " */ " << endl;
-    myfile << "extern \"C\" void query(Database* db) {" << endl;
+    myfile << "extern \"C\" void query(Database* db, const vector<string>& params) {" << endl;
     if (qu->shouldExplain()) {
         //Replace special characters
         string code = qu->generateQueryCode();
@@ -169,16 +174,26 @@ string DatabaseTools::parseAndWriteQuery(const string& query, Schema* s) {
     return filename;
 }
 
-void DatabaseTools::performanceTest(Schema* s) {
+void DatabaseTools::performanceTest(Schema* s, Database* db) {
     cout << "Testing performance..." << endl;
+    long timeExecute;
 
     //Load all queries
     string queries[2];
-    queries[0] = DatabaseTools::parseAndWriteQuery("INSERT INTO warehouse (w_id) VALUES ()", s);
-    DatabaseTools::compileFile(queries[0] + ".cpp", queries[0] + ".so");
+    queries[0] = DatabaseTools::parseAndWriteQuery("INSERT INTO warehouse (w_id, w_city) VALUES (?,?)", s);
+    DatabaseTools::compileFile(queries[0] );
 
-    queries[1] = DatabaseTools::parseAndWriteQuery("SELECT w_id FROM warehouse", s);
-    DatabaseTools::compileFile(queries[1] + ".cpp", queries[1] + ".so");
+    queries[1] = DatabaseTools::parseAndWriteQuery("UPDATE warehouse SET w_city=? WHERE w_id=?", s);
+    DatabaseTools::compileFile(queries[1]);
+
+    vector<string> params1{"15", "test"};
+    timeExecute = DatabaseTools::loadAndRunQuery(queries[0], db, params1);
+
+
+    vector<string> params2;
+    params2.push_back("test_update");
+    params2.push_back("15");
+    timeExecute = DatabaseTools::loadAndRunQuery(queries[1], db, params2);
 
     //TODO
     //Manually do a compiled insert + update vs one update

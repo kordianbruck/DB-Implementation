@@ -25,6 +25,7 @@ string QueryInsert::generateQueryCode() {
     out << "auto r = Database::";
     out << r.getTypeRelationName() << "::Row{};\n" << endl;
     out << "try {" << endl;
+    int currentVar = 0;
     for (auto& field : r.attributes) {
         string val = "";
         for (auto& findVal : fields) {
@@ -33,12 +34,19 @@ string QueryInsert::generateQueryCode() {
             }
         }
         if (val.length() > 0) {
-            out << "r." << field.name << " = r." << field.name << ".castString(\"" << val << "\", " << val.size() << ");" << endl;
+            out << "r." << field.name << " = r." << field.name << ".castString(";
+            if (val == "?") {
+                out << "params[" << currentVar << "].c_str(), " << "params[" << currentVar << "].size()";
+                currentVar++;
+            } else {
+                out << "\"" << val << "\", " << val.size();
+            }
+            out << ");" << endl;
         } else if (field.type == Types::Tag::Date) {
             out << "r." << field.name << " = r." << field.name << ".castString(\"0000-01-01\", 10);" << endl;
         } else if (field.type == Types::Tag::Datetime) {
             out << "r." << field.name << " = ";
-            if(field.generatedStart) {
+            if (field.generatedStart) {
                 out << "Timestamp::now();";
             } else {
                 out << "Timestamp::null();";

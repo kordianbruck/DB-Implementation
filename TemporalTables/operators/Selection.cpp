@@ -2,8 +2,8 @@
 #include <tuple>
 #include "Selection.h"
 
-Selection::Selection(shared_ptr<Operator> in, selectionType cond, Timestamp sysTimeStart, Timestamp sysTimeEnd)
-        : input(in), conditions(cond), sysTimeStart(sysTimeStart), sysTimeEnd(sysTimeEnd) {
+Selection::Selection(shared_ptr<Operator> in, selectionType cond, Timestamp sysTimeStart, Timestamp sysTimeEnd, int paramOffset)
+        : input(in), conditions(cond), sysTimeStart(sysTimeStart), sysTimeEnd(sysTimeEnd), paramOffset(paramOffset) {
     input->setConsumer(this);
     for (auto& c : conditions) {
         this->required.insert(c.first);
@@ -67,8 +67,17 @@ string Selection::consume(Operator& op) {
             out << "&&";
         }
     }
+
+
     for (auto& c : conditions) {
-        out << (get<0>(c))->attr->name << " == " << get<1>(c);
+        out << c.first->attr->name << " == ";
+        if (c.second == "?") {
+            out << c.first->attr->name << ".castString(";
+            out << "params[" << paramOffset << "].c_str(), " << "params[" << paramOffset << "].size())";
+            paramOffset++;
+        } else {
+            out << c.second;
+        }
         if (c != *(conditions.end() - 1)) {
             out << " && ";
         }

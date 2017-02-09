@@ -17,8 +17,10 @@ class Selection : public Operator {
     Timestamp sysTimeEnd = Timestamp::null();
     IU* sysTimeEndIU = nullptr;
 
+    int paramOffset;
+
 public:
-    Selection(shared_ptr<Operator>, selectionType, Timestamp = Timestamp::null(), Timestamp = Timestamp::null());
+    Selection(shared_ptr<Operator>, selectionType, Timestamp = Timestamp::null(), Timestamp = Timestamp::null(), int = 0);
 
     string produce() override;
 

@@ -175,6 +175,10 @@ void SQLParser::parseWhere(Query* query) {
             isJoin = false;
         } else if (token == SQLLexer::Eof) {
             break;
+        } else if (token == SQLLexer::Questionmark) {
+            constant = "?";
+            isExpressionReady = true;
+            isJoin = false;
         } else {
             throw ParserException("Unexpected token: " + lexer.getTokenValue());
         }
@@ -220,6 +224,8 @@ void SQLParser::parseInsertColumns(QueryInsert* query) {
             break;
         } else if (token == SQLLexer::Identifier) {
             query->fields.push_back(make_pair(lexer.getTokenValue(), ""));
+        } else if (token == SQLLexer::Comma) {
+            //skip
         } else {
             throw ParserException("Unexpected token in insert column: " + lexer.getTokenValue() + to_string(token));
         }
@@ -250,6 +256,12 @@ void SQLParser::parseInsertValues(QueryInsert* query) {
             }
             query->fields[currentColumn].second = lexer.getTokenValue();
             currentColumn++;
+        } else if (token == SQLLexer::Questionmark) {
+            query->fields[currentColumn].second = "?";
+            currentColumn++;
+            query->questionMarksReserved++;
+        } else if (token == SQLLexer::Comma) {
+            //skip
         } else {
             throw ParserException("Unexpected token in insert values: " + lexer.getTokenValue() + to_string(token));
         }
@@ -301,6 +313,10 @@ void SQLParser::parseSet(QueryUpdate* query) {
             }
             constant = lexer.getTokenValue();
             isExpressionReady = true;
+        } else if (token == SQLLexer::Questionmark) {
+            constant = "?";
+            isExpressionReady = true;
+            query->questionMarksReserved++;
         } else if (token == SQLLexer::Eof) {
             break;
         } else {

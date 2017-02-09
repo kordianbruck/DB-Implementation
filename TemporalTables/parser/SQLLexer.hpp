@@ -23,7 +23,8 @@ public:
         Plus,       //13
         Minus,      //14
         ParOpen,    //15
-        ParClose    //16
+        ParClose,    //16
+        Questionmark    //17
     };
 private:
     // input string

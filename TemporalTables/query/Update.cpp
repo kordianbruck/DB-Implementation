@@ -46,7 +46,8 @@ string QueryUpdate::generateQueryCode() {
     auto selectionConditions = getSelections(ts);
 
     if (selectionConditions.size() > 0) {
-        finder = new Selection(shared_ptr<TableScan>(ts), selectionConditions);
+        auto n = Timestamp::null();
+        finder = new Selection(shared_ptr<TableScan>(ts), selectionConditions, n, n, questionMarksReserved);
     } else {
         finder = ts;
     }

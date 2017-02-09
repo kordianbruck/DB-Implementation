@@ -37,6 +37,7 @@ SQLLexer::Token SQLLexer::getNext(){
 			case ',': return Comma;
 			case '(': return ParOpen;
 			case ')': return ParClose;
+			case '?': return Questionmark;
 			case '<':
 				if ((pos==input.end())||((*pos)!='>'))
 					return Error;

@@ -16,7 +16,7 @@ string testQueries[] = {
 
 int main(int argc, char** argv) {
     if (argc != 2) {
-        argv[1] = (char*) "./script/schema_sys_time.sql";
+        argv[1] = (char*) "./script/schema_performance.sql";
     }
 
     //Delete old queries
@@ -48,6 +48,8 @@ int main(int argc, char** argv) {
     cout << "Enter a sql query, 'show queries', 'run <query>', 'show performance', 'show schema' or 'exit' to quit: " << endl;
     string line;
     long timeCompile = 0, timeExecute = 0;
+    //Pass an empty vector as we don't support prepared statements on the console
+    vector<string> parameters;
     do {
         //Do we want to exit?
         if (line == "exit") {
@@ -74,13 +76,13 @@ int main(int argc, char** argv) {
         } else if (line == "show schema") { //Display the database schema
             cout << schema->toString() << endl;
         } else if (line == "show performance") { //Performance test the database
-            DatabaseTools::performanceTest(schema);
+            DatabaseTools::performanceTest(schema, db);
         } else if (line != "") { //Actually proccess queries
             try {
                 string file = DatabaseTools::parseAndWriteQuery(line, schema);
-                timeCompile = DatabaseTools::compileFile(file + ".cpp", file + ".so");
+                timeCompile = DatabaseTools::compileFile(file);
                 if (timeCompile >= 0) {
-                    timeExecute = DatabaseTools::loadAndRunQuery(file + ".so", db);
+                    timeExecute = DatabaseTools::loadAndRunQuery(file, db, parameters);
                 } else {
                     cerr << "\tCompilation failed..." << endl;
                 }

@@ -2,8 +2,8 @@
 #include <iostream>
 #include <dirent.h>
 #include "utils/DatabaseTools.h"
-#include "db_tempo.cpp"
-//#include "tmp/query_910dd58f34f7307fb5634b01dfde16ea.cpp"
+//#include "tmp/db.cpp"
+#include "tmp/query_f28009a718920273f2f0ea65e0bf21f8.cpp"
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -21,16 +21,17 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    Database* db = make_database("../tbl/");
+    Database* db = make_database("./tblTemporal/");
     if (db == nullptr) {
         cout << "aborting due to schema failed to load" << endl;
         return 1;
     }
 
-    string date = "2017-02-01 12:00:00";
-    cout << Timestamp::castString(date.c_str(), date.length()).value << endl;
-
-    //query(db);
+    //string date = "2017-02-01 12:00:00";
+    //cout << Timestamp::castString(date.c_str(), date.length()).value << endl;
+    vector<string> params;
+    params.push_back("test");
+    query(db, params);
 
     //Turn off warnings caused by generated Database code, that is not available at compile time
 #pragma GCC diagnostic push
