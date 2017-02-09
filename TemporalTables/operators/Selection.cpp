@@ -51,7 +51,7 @@ string Selection::consume(Operator& op) {
             out << sysTimeStartIU->attr->name << ".value >= " << sysTimeStart.value << " || ";
             out << sysTimeEndIU->attr->name << ".value <= " << sysTimeEnd.value;
         } else { //No ts passed: only show "current" view of the db
-            out << sysTimeStartIU->attr->name << ".value <= " << Timestamp::now().value << " && ";
+            out << sysTimeStartIU->attr->name << ".value <= Timestamp::now().value && ";
             out << sysTimeEndIU->attr->name << ".value == 0 ";
         }
         out << ")";
