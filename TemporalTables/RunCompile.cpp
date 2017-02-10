@@ -4,14 +4,14 @@
 #include "utils/DatabaseTools.h"
 
 string testQueries[] = {
-        "Select * from warehouse", //0
-        "Select * from warehouse where w_id=1", //1
-        "Select * from warehouse FOR SYSTEM_TIME AS OF '2017-02-05 12:00:00'", //2
-        "explain Select * from warehouse where w_id=1",//3
-        "update warehouse set w_name = 'abc' where w_id=4",//4
-        "delete from warehouse where w_id=4",//5
+        "SELECT * FROM warehouse", //0
+        "SELECT * FROM warehouse WHERE w_id=1", //1
+        "SELECT * FROM warehouse FOR SYSTEM_TIME AS OF '2017-02-05 12:00:00'", //2
+        "EXPLAIN SELECT * FROM warehouse WHERE w_id=1",//3
+        "UPDATE warehouse SET w_name = 'abc' WHERE w_id=4",//4
+        "DELETE FROM warehouse WHERE w_id=4",//5
         "INSERT INTO warehouse (w_id) VALUES (6)",//6
-        "Select * from warehouse FOR SYSTEM_TIME AS OF '2017-02-08 11:22:42' WHERE w_id=1",//7
+        "SELECT * FROM warehouse FOR SYSTEM_TIME AS OF '2017-02-08 11:22:42' WHERE w_id=1",//7
 };
 
 int main(int argc, char** argv) {
