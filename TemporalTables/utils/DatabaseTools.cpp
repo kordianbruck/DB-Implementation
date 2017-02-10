@@ -191,11 +191,11 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
     using namespace std::chrono;
 
     int iterationsInsert = 1000000;
-    int iterationsUpdate = 100;
-    long time = 0;
+    int iterationsUpdate = 1000000;
+    long time = 0, timeTemporal;
     vector<string> params{"", ""};
 
-    cout << "Testing performance - this may take some time" << endl;
+    cout << "Testing performance - this may take some time (" << iterationsInsert << " iterations)" << endl;
     cout << "compiling queries first";
     //Load all queries
     string queriesTemporal[3], queriesNormal[3];
@@ -259,8 +259,8 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
             }
 
             dlclose(handle);
-            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << "Insert - Temporal: " << time;
+            timeTemporal = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << "Insert - Temporal: " << timeTemporal << "ms (" << (iterationsInsert / (timeTemporal / 1000.0)) << " o/s )";
         }
 
         //Inserts Normal
@@ -278,8 +278,9 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
 
             dlclose(handle);
             time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << " / Normal: " << time << endl;
+            cout << " / Normal: " << time << "ms (" << (iterationsInsert / (time / 1000.0)) << " o/s )";
         }
+        cout << " - " << ((double) time / (double) timeTemporal * 100.0) << "% slowdown" << endl;
     }
 
     //Updates
@@ -298,8 +299,8 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
             }
 
             dlclose(handle);
-            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << "Update - Temporal: " << time;
+            timeTemporal = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << "Update - Temporal: " << timeTemporal << "ms (" << (iterationsUpdate / (timeTemporal / 1000.0)) << " o/s )";
         }
 
         //Normal
@@ -317,8 +318,9 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
 
             dlclose(handle);
             time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << " / Normal: " << time << endl;
+            cout << " / Normal: " << time << "ms (" << (iterationsUpdate / (time / 1000.0)) << " o/s )";
         }
+        cout << " - " << ((double) time / (double) timeTemporal * 100.0) << "% slowdown" << endl;
     } catch (const char* e) {
         cout << e << endl;
     }
@@ -338,8 +340,8 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
             }
 
             dlclose(handle);
-            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << "Delete - Temporal: " << time;
+            timeTemporal = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << "Delete - Temporal: " << timeTemporal << "ms (" << (iterationsInsert / (timeTemporal / 1000.0)) << " o/s )";
         }
 
         //Normal
@@ -356,10 +358,15 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
 
             dlclose(handle);
             time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << " / Normal: " << time << endl;
+            cout << " / Normal: " << time << "ms (" << (iterationsInsert / (time / 1000.0)) << " o/s )";
         }
+        cout << " - " << ((double) time / (double) timeTemporal * 100.0) << "% slowdown" << endl;
     } catch (const char* e) {
         cout << e << endl;
     }
 
+    //Output the final sizes
+    void* handle = dlopen((folderTmp + dbName + ".so").c_str(), RTLD_NOW);
+    auto getSize = reinterpret_cast<size_t (*)(Database*, string)>(dlsym(handle, "getSize"));
+    cout << "Tables size - temporal: " << getSize(db, "wh") << " / normal: " << getSize(db, "who") << endl;
 }

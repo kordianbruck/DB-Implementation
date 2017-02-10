@@ -31,7 +31,7 @@ public:
 
     void setConsumer(Operator*);
 
-    string randomEntityName(std::string::size_type len = 5);
+    static string randomEntityName(std::string::size_type len = 5);
 
 protected:
     Operator* consumer;

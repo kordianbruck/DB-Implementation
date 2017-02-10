@@ -18,7 +18,7 @@ HashJoin::HashJoin(Operator& left, Operator& right, vector<tuple<IU*, IU*>> cond
         this->required.insert(get<1>(c));
     }
 
-    mapName = "map" + this->randomEntityName();
+    mapName = "map" + Operator::randomEntityName();
     this->produced.insert(left.getProduced().begin(), left.getProduced().end());
     this->produced.insert(right.getProduced().begin(), right.getProduced().end());
 }

@@ -75,8 +75,11 @@ string Selection::consume(Operator& op) {
             out << c.first->attr->name << ".castString(";
             out << "params[" << paramOffset << "].c_str(), " << "params[" << paramOffset << "].size())";
             paramOffset++;
-        } else {
+        } else if (c.first->attr->type == Types::Tag::Integer) {
             out << c.second;
+        } else {
+            out << c.first->attr->name << ".castString(";
+            out << "\"" << c.second << "\", " << c.second.size() << ")";
         }
         if (c != *(conditions.end() - 1)) {
             out << " && ";

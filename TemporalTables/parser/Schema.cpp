@@ -291,6 +291,12 @@ string Schema::generateDatabaseCode() const {
             "    db->import(filename);\n"
             "    return db;\n"
             "}";
+    out << "extern \"C\" size_t getSize(Database* db, std::string dbn) {\n"
+            "    if(dbn==\"wh\") {\n"
+            "        return db->warehouse.size();\n"
+            "    }\n"
+            "    return db->warehouseold.size();\n"
+            "}";
 
     return out.str();
 }

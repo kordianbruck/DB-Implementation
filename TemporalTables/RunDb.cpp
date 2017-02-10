@@ -3,7 +3,7 @@
 #include <dirent.h>
 #include "utils/DatabaseTools.h"
 //#include "tmp/db.cpp"
-#include "tmp/query_f28009a718920273f2f0ea65e0bf21f8.cpp"
+#include "tmp/query_b1bf7a48b4223134361205e8b4e74744.cpp"
 
 int main(int argc, char** argv) {
     if (argc != 2) {
@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
     //cout << Timestamp::castString(date.c_str(), date.length()).value << endl;
     vector<string> params;
     params.push_back("test");
+    params.push_back("abc");
     query(db, params);
 
     //Turn off warnings caused by generated Database code, that is not available at compile time

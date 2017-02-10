@@ -7,6 +7,14 @@ Delete::Delete(Operator& input, selectionType selections, Schema::Relation rel) 
     for (auto& e : selections) {
         this->required.insert(e.first);
     }
+    auto& allIUs = input.getProduced();
+    for(auto& e : rel.primaryKey) {
+        for(auto& iu : allIUs) {
+            if(iu->attr->name == rel.attributes[e].name) {
+                required.insert(iu);
+            }
+        }
+    }
     this->produced.insert(input.getProduced().begin(), input.getProduced().end());
 }
 

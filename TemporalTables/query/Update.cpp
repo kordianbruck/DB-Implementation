@@ -52,7 +52,7 @@ string QueryUpdate::generateQueryCode() {
         finder = ts;
     }
     vector<fieldType> fields = getFields(finder);
-    Update* u = new Update(*finder, fields, rel);
+    Update* u = new Update(*finder, fields, rel, selectionConditions, questionMarksReserved);
     out << u->produce();
 
     delete u;
