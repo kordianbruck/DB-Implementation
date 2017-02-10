@@ -174,27 +174,192 @@ string DatabaseTools::parseAndWriteQuery(const string& query, Schema* s) {
     return filename;
 }
 
+static const char charset[] =
+        "0123456789"
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+                "abcdefghijklmnopqrstuvwxyz";
+static auto randChar = []() -> char {
+    const size_t max_index = (sizeof(charset) - 1);
+    return charset[rand() % max_index];
+};
+
+void genRandom(string& str, size_t length) {
+    generate_n(str.begin(), length, randChar);
+}
+
 void DatabaseTools::performanceTest(Schema* s, Database* db) {
-    cout << "Testing performance..." << endl;
-    long timeExecute;
+    using namespace std::chrono;
 
+    int iterationsInsert = 1000000;
+    int iterationsUpdate = 100;
+    long time = 0;
+    vector<string> params{"", ""};
+
+    cout << "Testing performance - this may take some time" << endl;
+    cout << "compiling queries first";
     //Load all queries
-    string queries[2];
-    queries[0] = DatabaseTools::parseAndWriteQuery("INSERT INTO warehouse (w_id, w_city) VALUES (?,?)", s);
-    DatabaseTools::compileFile(queries[0] );
+    string queriesTemporal[3], queriesNormal[3];
 
-    queries[1] = DatabaseTools::parseAndWriteQuery("UPDATE warehouse SET w_city=? WHERE w_id=?", s);
-    DatabaseTools::compileFile(queries[1]);
+    try {
+#pragma omp parallel sections
+        {
+#pragma omp section
+            {
+                queriesTemporal[0] = DatabaseTools::parseAndWriteQuery("INSERT INTO warehouse (w_id, w_city) VALUES (?,?)", s);
+                DatabaseTools::compileFile(queriesTemporal[0]);
+            }
+#pragma omp section
+            {
+                queriesTemporal[1] = DatabaseTools::parseAndWriteQuery("UPDATE warehouse SET w_city=? WHERE w_id=?", s);
+                DatabaseTools::compileFile(queriesTemporal[1]);
+            }
+#pragma omp section
+            {
+                queriesTemporal[2] = DatabaseTools::parseAndWriteQuery("DELETE FROM warehouse WHERE w_id=?", s);
+                DatabaseTools::compileFile(queriesTemporal[2]);
+            }
+#pragma omp section
+            {
+                queriesNormal[0] = DatabaseTools::parseAndWriteQuery("INSERT INTO warehouseold (w_id, w_city) VALUES (?,?)", s);
+                DatabaseTools::compileFile(queriesNormal[0]);
+            }
+#pragma omp section
+            {
+                queriesNormal[1] = DatabaseTools::parseAndWriteQuery("UPDATE warehouseold SET w_city=? WHERE w_id=?", s);
+                DatabaseTools::compileFile(queriesNormal[1]);
+            }
 
-    vector<string> params1{"15", "test"};
-    timeExecute = DatabaseTools::loadAndRunQuery(queries[0], db, params1);
+#pragma omp section
+            {
+                queriesNormal[2] = DatabaseTools::parseAndWriteQuery("DELETE FROM warehouseold WHERE w_id=?", s);
+                DatabaseTools::compileFile(queriesNormal[2]);
+            }
+        }
+    } catch (ParserError& e) {
+        cerr << e.what() << " on line " << e.where() << endl;
+        return;
+    } catch (SQLParser::ParserException& e) {
+        cerr << e.what() << endl;
+        return;
+    }
+    cout << ": done." << endl;
 
+    {
+        //Inserts Temporal
+        {
+            string filenameExt = folderTmp + queriesTemporal[0] + ".so";
+            void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
+            high_resolution_clock::time_point start = high_resolution_clock::now();
+            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
 
-    vector<string> params2;
-    params2.push_back("test_update");
-    params2.push_back("15");
-    timeExecute = DatabaseTools::loadAndRunQuery(queries[1], db, params2);
+            for (int i = 6; i < iterationsInsert; i++) {
+                params[0] = to_string(i);
+                genRandom(params[1], 10);
+                query(db, params);
+            }
 
-    //TODO
-    //Manually do a compiled insert + update vs one update
+            dlclose(handle);
+            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << "Insert - Temporal: " << time;
+        }
+
+        //Inserts Normal
+        {
+            string filenameExt = folderTmp + queriesNormal[0] + ".so";
+            void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
+            high_resolution_clock::time_point start = high_resolution_clock::now();
+            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+
+            for (int i = 6; i < iterationsInsert; i++) {
+                params[0] = to_string(i);
+                genRandom(params[1], 10);
+                query(db, params);
+            }
+
+            dlclose(handle);
+            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << " / Normal: " << time << endl;
+        }
+    }
+
+    //Updates
+    try {
+        //Temporal
+        {
+            string filenameExt = folderTmp + queriesTemporal[1] + ".so";
+            void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
+            high_resolution_clock::time_point start = high_resolution_clock::now();
+            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+
+            for (int i = 6; i < iterationsUpdate; i++) {
+                genRandom(params[0], 10);
+                params[1] = to_string(i);
+                query(db, params);
+            }
+
+            dlclose(handle);
+            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << "Update - Temporal: " << time;
+        }
+
+        //Normal
+        {
+            string filenameExt = folderTmp + queriesNormal[1] + ".so";
+            void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
+            high_resolution_clock::time_point start = high_resolution_clock::now();
+            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+
+            for (int i = 6; i < iterationsUpdate; i++) {
+                genRandom(params[0], 10);
+                params[1] = to_string(i);
+                query(db, params);
+            }
+
+            dlclose(handle);
+            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << " / Normal: " << time << endl;
+        }
+    } catch (const char* e) {
+        cout << e << endl;
+    }
+
+    //Delete
+    try {
+        //Temporal
+        {
+            string filenameExt = folderTmp + queriesTemporal[2] + ".so";
+            void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
+            high_resolution_clock::time_point start = high_resolution_clock::now();
+            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+
+            for (int i = 0; i < iterationsInsert; i++) {
+                params[0] = to_string(i);
+                query(db, params);
+            }
+
+            dlclose(handle);
+            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << "Delete - Temporal: " << time;
+        }
+
+        //Normal
+        {
+            string filenameExt = folderTmp + queriesNormal[2] + ".so";
+            void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
+            high_resolution_clock::time_point start = high_resolution_clock::now();
+            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+
+            for (int i = 0; i < iterationsInsert; i++) {
+                params[0] = to_string(i);
+                query(db, params);
+            }
+
+            dlclose(handle);
+            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << " / Normal: " << time << endl;
+        }
+    } catch (const char* e) {
+        cout << e << endl;
+    }
+
 }

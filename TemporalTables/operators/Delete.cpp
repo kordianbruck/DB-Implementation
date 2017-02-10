@@ -33,14 +33,22 @@ string Delete::produce() {
 
             //Create the PK tuple
             keyTuple << "make_tuple(";
+            int paramOffset = 0;
             for (auto& pkAttrKey : rel.primaryKey) {
                 for (auto& selection : selections) {
                     if (selection.first->attr->name == rel.attributes[pkAttrKey].name) {
                         if (selection.first->attr->type == Types::Tag::Integer) {
-                            keyTuple << selection.second;
+                            if(selection.second == "?") {
+                                keyTuple << Schema::type(*selection.first->attr, true) << "::castString(";
+                                keyTuple << "params[" << paramOffset << "].c_str(), " << "params[" << paramOffset << "].size())";
+                                paramOffset++;
+                            }else{
+                                keyTuple << selection.second;
+                            }
                         } else {
                             throw ParserError(0, "Type in key not supported in deletes");
                         }
+                        break;
                     }
                 }
 

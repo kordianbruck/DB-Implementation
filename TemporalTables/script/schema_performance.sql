@@ -15,7 +15,7 @@ create table warehouse (
 )
 WITH (SYSTEM_VERSIONING = ON);
 
-create table warehouseOld (
+create table warehouseold (
    w_id integer not null,
    w_name varchar(10) not null,
    w_street_1 varchar(20) not null,

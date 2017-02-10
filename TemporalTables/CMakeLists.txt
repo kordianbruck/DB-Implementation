@@ -4,6 +4,13 @@ project(task5)
 FIND_PACKAGE(Boost 1.63 COMPONENTS program_options REQUIRED)
 INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIR})
 
+FIND_PACKAGE( OpenMP REQUIRED)
+if(OPENMP_FOUND)
+    message("-- OPENMP FOUND ${OpenMP_CXX_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
 set(SOURCE_FILES
         utils/Types.cpp utils/DatabaseTools.cpp
         parser/Schema.cpp parser/SchemaParser.cpp parser/IU.h parser/SQLLexer.cpp parser/SQLParser.cpp
@@ -25,8 +32,8 @@ TARGET_LINK_LIBRARIES(runCompile ${Boost_LIBRARIES})
 TARGET_LINK_LIBRARIES(runParser ${Boost_LIBRARIES})
 
 SET(CMAKE_CXX_FLAGS "-std=c++1y")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -pedantic -fshow-column -pipe -march=native -ldl -lrt ")
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -DENABLE_DEBUG_MACRO -fsanitize=undefined -fsanitize=address -fsanitize=leak -ggdb3 -O0 -DDEBUG")
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -flto -DNDEBUG -ggdb")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fopenmp -pedantic -fshow-column -pipe -march=native -ldl -lrt ")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fopenmp -DENABLE_DEBUG_MACRO -fsanitize=undefined -fsanitize=address -fsanitize=leak -ggdb3 -O0 -DDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -fopenmp -O3 -flto -DNDEBUG -ggdb")
 
 install(TARGETS runCompile RUNTIME DESTINATION bin)

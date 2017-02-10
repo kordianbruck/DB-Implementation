@@ -221,6 +221,10 @@ void Schema::genRelation(ostream& out, const Schema::Relation& rel) const {
 
     //Inserting
     out << "        void insert(Row& element) { " << endl;
+    if(hasPK && !rel.systemVersioning) {//TODO need a better index structure for temporal tables
+        out << "            auto it = pk.find(element.key());" << endl;
+        out << "            if(it != pk.end()) { throw \"Dupe PK!\"; }" << endl;
+    }
     if (rel.systemVersioning) {
         out << "if (element." << sysTimeColStart << " == Timestamp::null()) {element." << sysTimeColStart << " = Timestamp::now();}" << endl;
     }

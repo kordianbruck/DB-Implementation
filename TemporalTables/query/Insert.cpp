@@ -54,6 +54,6 @@ string QueryInsert::generateQueryCode() {
         }
     }
     out << "} catch (const char * r) { cout << r << endl; }";
-    out << "    db->warehouse.insert(r);";
+    out << "    db->" << r.name << ".insert(r);";
     return out.str();
 }
