@@ -48,6 +48,8 @@ struct DatabaseTools {
 
     static void performanceTest(Schema* s, Database*);
 
+    static void performanceTest2(Schema* s, Database*);
+
     template<typename T>
     static void loadTableFromFile(T& tbl, const std::string& file) {
         std::ifstream myfile(file);

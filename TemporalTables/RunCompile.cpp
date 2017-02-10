@@ -77,6 +77,8 @@ int main(int argc, char** argv) {
             cout << schema->toString() << endl;
         } else if (line == "show performance") { //Performance test the database
             DatabaseTools::performanceTest(schema, db);
+        } else if (line == "show performance2") { //Performance test the database
+            DatabaseTools::performanceTest2(schema, db);
         } else if (line != "") { //Actually proccess queries
             try {
                 string file = DatabaseTools::parseAndWriteQuery(line, schema);

@@ -2,6 +2,7 @@
 #include "DatabaseTools.h"
 
 
+using queryType = void (*)(Database*, vector<string>, bool);
 const string DatabaseTools::dbName = "db";
 const string DatabaseTools::folderTmp = "tmp/";
 const string DatabaseTools::folderTable = "./tblTemporal/";
@@ -88,14 +89,14 @@ long DatabaseTools::loadAndRunQuery(string filename, Database* db, vector<string
     }
 
     //Get the function pointer
-    auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+    auto query = reinterpret_cast<queryType>(dlsym(handle, "query"));
     if (!query) {
         cerr << "error: " << dlerror() << endl;
         return 0;
     }
 
     //Execute
-    query(db, tmp);
+    query(db, tmp, true);
 
     //Unload
     if (dlclose(handle)) {
@@ -156,7 +157,7 @@ string DatabaseTools::parseAndWriteQuery(const string& query, Schema* s) {
     myfile << "/* ";
     myfile << qu->toString();
     myfile << " */ " << endl;
-    myfile << "extern \"C\" void query(Database* db, const vector<string>& params) {" << endl;
+    myfile << "extern \"C\" void query(Database* db, const vector<string>& params, bool output) {" << endl;
     if (qu->shouldExplain()) {
         //Replace special characters
         string code = qu->generateQueryCode();
@@ -190,8 +191,8 @@ void genRandom(string& str, size_t length) {
 void DatabaseTools::performanceTest(Schema* s, Database* db) {
     using namespace std::chrono;
 
-    int iterationsInsert = 1000000;
-    int iterationsUpdate = 1000000;
+    int iterationsInsert = 4000000;
+    int iterationsUpdate = 4000000;
     long time = 0, timeTemporal;
     vector<string> params{"", ""};
 
@@ -200,7 +201,7 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
     //Load all queries
     string queriesTemporal[3], queriesNormal[3];
 
-    try {
+    {
 #pragma omp parallel sections
         {
 #pragma omp section
@@ -235,12 +236,6 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
                 DatabaseTools::compileFile(queriesNormal[2]);
             }
         }
-    } catch (ParserError& e) {
-        cerr << e.what() << " on line " << e.where() << endl;
-        return;
-    } catch (SQLParser::ParserException& e) {
-        cerr << e.what() << endl;
-        return;
     }
     cout << ": done." << endl;
 
@@ -250,17 +245,17 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
             string filenameExt = folderTmp + queriesTemporal[0] + ".so";
             void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
             high_resolution_clock::time_point start = high_resolution_clock::now();
-            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+            auto query = reinterpret_cast<queryType>(dlsym(handle, "query"));
 
             for (int i = 6; i < iterationsInsert; i++) {
                 params[0] = to_string(i);
                 genRandom(params[1], 10);
-                query(db, params);
+                query(db, params, false);
             }
 
             dlclose(handle);
             timeTemporal = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << "Insert - Temporal: " << timeTemporal << "ms (" << (iterationsInsert / (timeTemporal / 1000.0)) << " o/s )";
+            cout << "Insert - Temporal: " << timeTemporal << "ms (" << (iterationsInsert / (timeTemporal / 1000.0)) / 1000.0 << " kO/s )";
         }
 
         //Inserts Normal
@@ -268,19 +263,19 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
             string filenameExt = folderTmp + queriesNormal[0] + ".so";
             void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
             high_resolution_clock::time_point start = high_resolution_clock::now();
-            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+            auto query = reinterpret_cast<queryType>(dlsym(handle, "query"));
 
             for (int i = 6; i < iterationsInsert; i++) {
                 params[0] = to_string(i);
                 genRandom(params[1], 10);
-                query(db, params);
+                query(db, params, false);
             }
 
             dlclose(handle);
             time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << " / Normal: " << time << "ms (" << (iterationsInsert / (time / 1000.0)) << " o/s )";
+            cout << " / Normal: " << time << "ms (" << (iterationsInsert / (time / 1000.0)) / 1000.0 << " kO/s )";
         }
-        cout << " - " << ((double) time / (double) timeTemporal * 100.0) << "% slowdown" << endl;
+        cout << " / " << (100.0 - (double) time / (double) timeTemporal * 100.0) << "% slower" << endl;
     }
 
     //Updates
@@ -290,17 +285,17 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
             string filenameExt = folderTmp + queriesTemporal[1] + ".so";
             void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
             high_resolution_clock::time_point start = high_resolution_clock::now();
-            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+            auto query = reinterpret_cast<queryType>(dlsym(handle, "query"));
 
             for (int i = 6; i < iterationsUpdate; i++) {
                 genRandom(params[0], 10);
                 params[1] = to_string(i);
-                query(db, params);
+                query(db, params, false);
             }
 
             dlclose(handle);
             timeTemporal = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << "Update - Temporal: " << timeTemporal << "ms (" << (iterationsUpdate / (timeTemporal / 1000.0)) << " o/s )";
+            cout << "Update - Temporal: " << timeTemporal << "ms (" << (iterationsUpdate / (timeTemporal / 1000.0)) / 1000.0 << " kO/s )";
         }
 
         //Normal
@@ -308,19 +303,19 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
             string filenameExt = folderTmp + queriesNormal[1] + ".so";
             void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
             high_resolution_clock::time_point start = high_resolution_clock::now();
-            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+            auto query = reinterpret_cast<queryType>(dlsym(handle, "query"));
 
             for (int i = 6; i < iterationsUpdate; i++) {
                 genRandom(params[0], 10);
                 params[1] = to_string(i);
-                query(db, params);
+                query(db, params, false);
             }
 
             dlclose(handle);
             time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << " / Normal: " << time << "ms (" << (iterationsUpdate / (time / 1000.0)) << " o/s )";
+            cout << " / Normal: " << time << "ms (" << (iterationsUpdate / (time / 1000.0)) / 1000.0 << " kO/s )";
         }
-        cout << " - " << ((double) time / (double) timeTemporal * 100.0) << "% slowdown" << endl;
+        cout << " / " << (100.0 - (double) time / (double) timeTemporal * 100.0) << "% slower" << endl;
     } catch (const char* e) {
         cout << e << endl;
     }
@@ -332,16 +327,16 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
             string filenameExt = folderTmp + queriesTemporal[2] + ".so";
             void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
             high_resolution_clock::time_point start = high_resolution_clock::now();
-            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+            auto query = reinterpret_cast<queryType>(dlsym(handle, "query"));
 
             for (int i = 0; i < iterationsInsert; i++) {
                 params[0] = to_string(i);
-                query(db, params);
+                query(db, params, false);
             }
 
             dlclose(handle);
             timeTemporal = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << "Delete - Temporal: " << timeTemporal << "ms (" << (iterationsInsert / (timeTemporal / 1000.0)) << " o/s )";
+            cout << "Delete - Temporal: " << timeTemporal << "ms (" << (iterationsInsert / (timeTemporal / 1000.0)) / 1000.0 << " kO/s )";
         }
 
         //Normal
@@ -349,18 +344,18 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
             string filenameExt = folderTmp + queriesNormal[2] + ".so";
             void* handle = dlopen(filenameExt.c_str(), RTLD_NOW);
             high_resolution_clock::time_point start = high_resolution_clock::now();
-            auto query = reinterpret_cast<void (*)(Database*, vector<string>)>(dlsym(handle, "query"));
+            auto query = reinterpret_cast<queryType>(dlsym(handle, "query"));
 
             for (int i = 0; i < iterationsInsert; i++) {
                 params[0] = to_string(i);
-                query(db, params);
+                query(db, params, false);
             }
 
             dlclose(handle);
             time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
-            cout << " / Normal: " << time << "ms (" << (iterationsInsert / (time / 1000.0)) << " o/s )";
+            cout << " / Normal: " << time << "ms (" << (iterationsInsert / (time / 1000.0)) / 1000.0 << " kO/s )";
         }
-        cout << " - " << ((double) time / (double) timeTemporal * 100.0) << "% slowdown" << endl;
+        cout << " / " << -(100.0 - (double) time / (double) timeTemporal * 100.0) << "% faster" << endl;
     } catch (const char* e) {
         cout << e << endl;
     }
@@ -369,4 +364,161 @@ void DatabaseTools::performanceTest(Schema* s, Database* db) {
     void* handle = dlopen((folderTmp + dbName + ".so").c_str(), RTLD_NOW);
     auto getSize = reinterpret_cast<size_t (*)(Database*, string)>(dlsym(handle, "getSize"));
     cout << "Tables size - temporal: " << getSize(db, "wh") << " / normal: " << getSize(db, "who") << endl;
+}
+
+void DatabaseTools::performanceTest2(Schema* s, Database* db) {
+    using namespace std::chrono;
+
+    int iterationsInsert = 50000;
+    int iterationsSelect = 500;
+    int iterationsRounds = 5;
+    long time = 0, timeTemporal = 0;
+    vector<string> params{"", ""};
+
+    cout << "Testing performance w/ select - this may take some time" << endl;
+    cout << "compiling queries first";
+    //Load all queries
+    string queriesTemporal[3], queriesNormal[3];
+
+    {
+#pragma omp parallel sections
+        {
+#pragma omp section
+            {
+                queriesTemporal[0] = DatabaseTools::parseAndWriteQuery("INSERT INTO warehouse (w_id, w_city) VALUES (?,?)", s);
+                DatabaseTools::compileFile(queriesTemporal[0]);
+            }
+#pragma omp section
+            {
+                queriesTemporal[1] = DatabaseTools::parseAndWriteQuery("UPDATE warehouse SET w_city=? WHERE w_id=?", s);
+                DatabaseTools::compileFile(queriesTemporal[1]);
+            }
+#pragma omp section
+            {
+                queriesTemporal[2] = DatabaseTools::parseAndWriteQuery("SELECT * FROM warehouse", s);
+                DatabaseTools::compileFile(queriesTemporal[2]);
+            }
+#pragma omp section
+            {
+                queriesNormal[0] = DatabaseTools::parseAndWriteQuery("INSERT INTO warehouseold (w_id, w_city) VALUES (?,?)", s);
+                DatabaseTools::compileFile(queriesNormal[0]);
+            }
+#pragma omp section
+            {
+                queriesNormal[1] = DatabaseTools::parseAndWriteQuery("UPDATE warehouseold SET w_city=? WHERE w_id=?", s);
+                DatabaseTools::compileFile(queriesNormal[1]);
+            }
+#pragma omp section
+            {
+                queriesNormal[2] = DatabaseTools::parseAndWriteQuery("SELECT * FROM warehouseold", s);
+                DatabaseTools::compileFile(queriesNormal[2]);
+            }
+        }
+    }
+    cout << ": done." << endl;
+
+    //Need to check table sizes
+    void* handleGetSize = dlopen((folderTmp + dbName + ".so").c_str(), RTLD_NOW);
+    auto getSize = reinterpret_cast<size_t (*)(Database*, string)>(dlsym(handleGetSize, "getSize"));
+
+    {
+
+        string filenameExt1 = folderTmp + queriesTemporal[0] + ".so";
+        void* handleInsert = dlopen(filenameExt1.c_str(), RTLD_NOW);
+        string filenameExt2 = folderTmp + queriesTemporal[1] + ".so";
+        void* handleUpdate = dlopen(filenameExt2.c_str(), RTLD_NOW);
+        string filenameExt3 = folderTmp + queriesTemporal[2] + ".so";
+        void* handleSelect = dlopen(filenameExt3.c_str(), RTLD_NOW);
+
+        auto queryInsert = reinterpret_cast<queryType>(dlsym(handleInsert, "query"));
+        auto queryUpdate = reinterpret_cast<queryType>(dlsym(handleUpdate, "query"));
+        auto querySelect = reinterpret_cast<queryType>(dlsym(handleSelect, "query"));
+
+
+        int pkAutoIncrement = 5;
+        for (int i = 0; i < iterationsRounds; i++) {
+            int target = pkAutoIncrement + iterationsInsert;
+
+            //Do some inserts
+            for (; pkAutoIncrement < target; pkAutoIncrement++) {
+                params[0] = to_string(pkAutoIncrement);
+                genRandom(params[1], 10);
+                queryInsert(db, params, false);
+            }
+
+            //Do some updates
+            pkAutoIncrement -= iterationsInsert;
+            for (; pkAutoIncrement < target; pkAutoIncrement++) {
+                params[1] = to_string(pkAutoIncrement);
+                genRandom(params[0], 10);
+                queryUpdate(db, params, false);
+            }
+
+            //Test table scan
+            high_resolution_clock::time_point start = high_resolution_clock::now();
+            for (int j = 0; j < iterationsSelect; j++) {
+                querySelect(db, params, false);
+            }
+            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << "With " << getSize(db, "wh") << " records took: " << time << "ms" << endl;
+        }
+
+        dlclose(handleInsert);
+        dlclose(handleUpdate);
+        dlclose(handleSelect);
+    }
+    cout << endl;
+    cout << "old fashion: " << endl;
+    try {
+
+        string filenameExt1 = folderTmp + queriesNormal[0] + ".so";
+        void* handleInsert = dlopen(filenameExt1.c_str(), RTLD_NOW);
+        string filenameExt2 = folderTmp + queriesNormal[1] + ".so";
+        void* handleUpdate = dlopen(filenameExt2.c_str(), RTLD_NOW);
+        string filenameExt3 = folderTmp + queriesNormal[2] + ".so";
+        void* handleSelect = dlopen(filenameExt3.c_str(), RTLD_NOW);
+
+        auto queryInsert = reinterpret_cast<queryType>(dlsym(handleInsert, "query"));
+        auto queryUpdate = reinterpret_cast<queryType>(dlsym(handleUpdate, "query"));
+        auto querySelect = reinterpret_cast<queryType>(dlsym(handleSelect, "query"));
+
+
+        int pkAutoIncrement = 5;
+        for (int i = 0; i < iterationsRounds; i++) {
+            int target = pkAutoIncrement + iterationsInsert;
+
+            //Do some inserts
+            for (; pkAutoIncrement < target; pkAutoIncrement++) {
+                params[0] = to_string(pkAutoIncrement);
+                genRandom(params[1], 10);
+                try {
+                    queryInsert(db, params, false);
+                } catch (const char* e) {}
+            }
+
+            //Do some updates
+            pkAutoIncrement -= iterationsInsert;
+            for (; pkAutoIncrement < target; pkAutoIncrement++) {
+                params[1] = to_string(pkAutoIncrement);
+                genRandom(params[0], 10);
+                queryUpdate(db, params, false);
+            }
+
+            //Test table scan
+            high_resolution_clock::time_point start = high_resolution_clock::now();
+            for (int j = 0; j < iterationsSelect; j++) {
+                querySelect(db, params, false);
+            }
+            time = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+            cout << "With " << getSize(db, "who") << " records took: " << time << "ms" << endl;
+        }
+
+        dlclose(handleInsert);
+        dlclose(handleUpdate);
+        dlclose(handleSelect);
+    } catch (const char* e) {
+        cerr << e << endl;
+    }
+
+    dlclose(handleGetSize);
 }
