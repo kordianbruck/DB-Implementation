@@ -56,4 +56,9 @@ Of course enabling versioning on a table will have an impact on performance as o
 
 As there were not optimizations yet done on ```SELECT``` queries and most of them had to do a table scan in any case, there is no point in comparing the performance here.
 
+## Outlook
+In order to really make this viable we have to consider new index structures that support temporal queries. Interval trees might be useful but there is no standard solution for this problem statement as we need to consider multiple cases. Depending on which data we are asking for and their respective selectivity we might even be faster with a normal table scan.
+
+As this feature is such an underlying game changer that changes the behavior of all basic operators, a lot of previously thought of concepts in query optimization and execution must be revisited and optimized for the use cases of temporal queries. Many systems use a separate history table that would enable them to turn on compression to minimize duplicate data. 
+
 Summarizing temporal tables are a really useful addition for any database system that wants their use to analyze historical data. Big data currently is mostly about find relationships on the current view of data, but adding a time dimension to data might open a lot of ways to generate new insights.
