@@ -1,4 +1,8 @@
-# Temporal Tables with in-memory databases
+% Temporal Tables with in-memory Databases
+% Kordian Bruck <ask@bruck.me>
+% 10.03.2017
+---
+
 This is a summary of the project written for the database implementation practical course at TUM.
 
 ## Abstract
